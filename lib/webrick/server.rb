@@ -172,7 +172,7 @@ module WEBrick
                     unless config[:DoNotReverseLookup].nil?
                       sock.do_not_reverse_lookup = !!config[:DoNotReverseLookup]
                     end
-                    th = start_thread(sock, &block)
+                    th = start_ractor(sock, &block)
                     th[:WEBrickThread] = true
                     thgroup.add(th)
                   else
@@ -272,7 +272,7 @@ module WEBrick
     #
     # If any errors occur in the block they are logged and handled.
 
-    def start_thread(sock, &block)
+    def start_ractor(sock, &block)
       Thread.start {
         begin
           Thread.current[:WEBrickSocket] = sock
