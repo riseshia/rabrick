@@ -140,7 +140,7 @@ module WEBrick
     #     server.shutdown
     #   end
 
-    def start(&block)
+    def start
       raise ServerError, "already started." if @status != :Stop
 
       server_type = @config[:ServerType] || SimpleServer
@@ -172,7 +172,7 @@ module WEBrick
                     unless config[:DoNotReverseLookup].nil?
                       sock.do_not_reverse_lookup = !!config[:DoNotReverseLookup]
                     end
-                    th = start_ractor(sock, &block)
+                    th = start_ractor(sock)
                     th[:WEBrickThread] = true
                     thgroup.add(th)
                   else
@@ -272,7 +272,7 @@ module WEBrick
     #
     # If any errors occur in the block they are logged and handled.
 
-    def start_ractor(sock, &block)
+    def start_ractor(sock)
       Thread.start {
         begin
           Thread.current[:WEBrickSocket] = sock
@@ -291,7 +291,7 @@ module WEBrick
               Thread.exit
             end
           end
-          block ? block.call(sock) : run(sock)
+          run(sock)
         rescue Errno::ENOTCONN
           @logger.debug "Errno::ENOTCONN raised"
         rescue ServerError => e
