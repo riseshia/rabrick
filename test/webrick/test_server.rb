@@ -42,7 +42,6 @@ class TestWEBrickServer < Test::Unit::TestCase
 
       server = WEBrick::HTTPServer.new({
         :BindAddress => "127.0.0.1", :Port => 0,
-        :StopCallback => Proc.new{ stopped += 1 },
         :Logger => logger,
       })
       server.listeners[0].close
@@ -54,28 +53,6 @@ class TestWEBrickServer < Test::Unit::TestCase
     assert_equal(1, stopped)
     assert_equal(1, log.length)
     assert_match(/FATAL SignalException: SIGTERM/, log[0])
-  end
-
-  def test_callbacks
-    accepted = started = stopped = 0
-    config = {
-      :AcceptCallback => Proc.new{ accepted += 1 },
-      :StartCallback => Proc.new{ started += 1 },
-      :StopCallback => Proc.new{ stopped += 1 },
-    }
-    TestWEBrick.start_server(Echo, config){|server, addr, port, log|
-      true while server.status != :Running
-      sleep 1 if defined?(RubyVM::MJIT) && RubyVM::MJIT.enabled? # server.status behaves unexpectedly with --jit-wait
-      assert_equal(1, started, log.call)
-      assert_equal(0, stopped, log.call)
-      assert_equal(0, accepted, log.call)
-      TCPSocket.open(addr, port){|sock| (sock << "foo\n").gets }
-      TCPSocket.open(addr, port){|sock| (sock << "foo\n").gets }
-      TCPSocket.open(addr, port){|sock| (sock << "foo\n").gets }
-      assert_equal(3, accepted, log.call)
-    }
-    assert_equal(1, started)
-    assert_equal(1, stopped)
   end
 
   def test_daemon
@@ -143,8 +120,6 @@ class TestWEBrickServer < Test::Unit::TestCase
     wakeup = -> {client_thread.wakeup}
     warn_flunk = WEBrick::Log.new(log, WEBrick::BasicLog::WARN)
     server = WEBrick::HTTPServer.new(
-      :StartCallback => wakeup,
-      :StopCallback => wakeup,
       :BindAddress => '0.0.0.0',
       :Port => 0,
       :Logger => warn_flunk)

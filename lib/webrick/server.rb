@@ -161,7 +161,6 @@ module WEBrick
         @logger.info \
           "#{self.class}#start: pid=#{$$} port=#{@config[:Port]}"
         @status = :Running
-        call_callback(:StartCallback)
 
         shutdown_pipe = @shutdown_pipe
 
@@ -209,7 +208,6 @@ module WEBrick
           @status = :Shutdown
           @logger.info "going to shutdown ..."
           thgroup.list.each{|th| th.join if th[:WEBrickThread] }
-          call_callback(:StopCallback)
           @logger.info "#{self.class}#start done."
           @status = :Stop
         end
@@ -306,7 +304,6 @@ module WEBrick
               end
             end
           end
-          call_callback(:AcceptCallback, sock)
           block ? block.call(sock) : run(sock)
         rescue Errno::ENOTCONN
           @logger.debug "Errno::ENOTCONN raised"
@@ -326,13 +323,6 @@ module WEBrick
           sock.close
         end
       }
-    end
-
-    ##
-    # Calls the callback +callback_name+ from the configuration with +args+
-
-    def call_callback(callback_name, *args)
-      @config[callback_name]&.call(*args)
     end
 
     def setup_shutdown_pipe

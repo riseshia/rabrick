@@ -87,14 +87,6 @@ module TestWEBrick
       :CGIInterpreter => TestWEBrick::RubyBin,
       :DocumentRoot => File.dirname(__FILE__),
       :DirectoryIndex => ["webrick.cgi"],
-      :RequestCallback => Proc.new{|req, res|
-        def req.meta_vars
-          meta = super
-          meta["RUBYLIB"] = $:.join(File::PATH_SEPARATOR)
-          meta[RbConfig::CONFIG['LIBPATHENV']] = ENV[RbConfig::CONFIG['LIBPATHENV']] if RbConfig::CONFIG['LIBPATHENV']
-          return meta
-        end
-      },
     }.merge(config)
     if RUBY_PLATFORM =~ /mswin|mingw|cygwin|bccwin32/
       config[:CGIPathEnv] = ENV['PATH'] # runtime dll may not be in system dir.

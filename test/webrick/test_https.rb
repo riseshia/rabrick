@@ -33,7 +33,6 @@ class TestWEBrickHTTPS < Test::Unit::TestCase
     http = HTTPSNITest.new(addr, port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    http.verify_callback = proc { |x, store| subject = store.chain[0].subject.to_s; x }
     http.sni_hostname = hostname
     req = Net::HTTP::Get.new(path)
     req["Host"] = "#{hostname}:#{port}"

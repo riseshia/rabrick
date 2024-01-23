@@ -123,15 +123,6 @@ module WEBrick
   # Adds SSL functionality to WEBrick::HTTPServer
 
   class HTTPServer < ::WEBrick::GenericServer
-    ##
-    # ServerNameIndication callback
-
-    def ssl_servername_callback(sslsocket, hostname = nil)
-      req = SNIRequest.new(sslsocket, hostname)
-      server = lookup_server(req)
-      server ? server.ssl_context : nil
-    end
-
     # :stopdoc:
 
     ##

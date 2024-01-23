@@ -329,56 +329,6 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
     end
   end
 
-  def test_script_disclosure
-    return if File.executable?(__FILE__) # skip on strange file system
-
-    config = {
-      :CGIInterpreter => TestWEBrick::RubyBinArray,
-      :DocumentRoot => File.dirname(__FILE__),
-      :CGIPathEnv => ENV['PATH'],
-      :RequestCallback => Proc.new{|req, res|
-        def req.meta_vars
-          meta = super
-          meta["RUBYLIB"] = $:.join(File::PATH_SEPARATOR)
-          meta[RbConfig::CONFIG['LIBPATHENV']] = ENV[RbConfig::CONFIG['LIBPATHENV']] if RbConfig::CONFIG['LIBPATHENV']
-          return meta
-        end
-      },
-    }
-    log_tester = lambda {|log, access_log|
-      log = log.reject {|s| /ERROR `.*\' not found\./ =~ s }
-      assert_equal([], log)
-    }
-    TestWEBrick.start_httpserver(config, log_tester) do |server, addr, port, log|
-      http = Net::HTTP.new(addr, port)
-      http.read_timeout = EnvUtil.apply_timeout_scale(60)
-      http.write_timeout = EnvUtil.apply_timeout_scale(60) if http.respond_to?(:write_timeout=)
-
-      req = Net::HTTP::Get.new("/webrick.cgi/test")
-      http.request(req) do |res|
-        assert_equal("200", res.code, log.call)
-        assert_equal("/test", res.body, log.call)
-      end
-
-      resok = windows?
-      response_assertion = Proc.new do |res|
-        if resok
-          assert_equal("200", res.code, log.call)
-          assert_equal("/test", res.body, log.call)
-        else
-          assert_equal("404", res.code, log.call)
-        end
-      end
-      req = Net::HTTP::Get.new("/webrick.cgi%20/test")
-      http.request(req, &response_assertion)
-      req = Net::HTTP::Get.new("/webrick.cgi./test")
-      http.request(req, &response_assertion)
-      resok &&= File.exist?(__FILE__+"::$DATA")
-      req = Net::HTTP::Get.new("/webrick.cgi::$DATA/test")
-      http.request(req, &response_assertion)
-    end
-  end
-
   def test_erbhandler
     config = { :DocumentRoot => File.dirname(__FILE__) }
     log_tester = lambda {|log, access_log|

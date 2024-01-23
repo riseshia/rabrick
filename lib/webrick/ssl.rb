@@ -39,17 +39,11 @@ module WEBrick
     #   Path to a directory containing CA certificates
     # :SSLCertificateStore  :: nil,
     #   OpenSSL::X509::Store used for certificate validation of the client
-    # :SSLTmpDhCallback     :: nil,
-    #   Callback invoked when DH parameters are required.
     # :SSLVerifyClient      ::
     #   Sets whether the client is verified.  This defaults to VERIFY_NONE
     #   which is typical for an HTTPS server.
     # :SSLVerifyDepth       ::
     #   Number of CA certificates to walk when verifying a certificate chain
-    # :SSLVerifyCallback    ::
-    #   Custom certificate verification callback
-    # :SSLServerNameCallback::
-    #   Custom servername indication callback
     # :SSLTimeout           ::
     #   Maximum session lifetime
     # :SSLOptions           ::
@@ -74,10 +68,8 @@ module WEBrick
       :SSLCACertificateFile => nil,
       :SSLCACertificatePath => nil,
       :SSLCertificateStore  => nil,
-      :SSLTmpDhCallback     => nil,
       :SSLVerifyClient      => ::OpenSSL::SSL::VERIFY_NONE,
       :SSLVerifyDepth       => nil,
-      :SSLVerifyCallback    => nil,   # custom verification
       :SSLTimeout           => nil,
       :SSLOptions           => nil,
       :SSLCiphers           => nil,
@@ -197,23 +189,12 @@ module WEBrick
       ctx.ca_file = config[:SSLCACertificateFile]
       ctx.ca_path = config[:SSLCACertificatePath]
       ctx.cert_store = config[:SSLCertificateStore]
-      ctx.tmp_dh_callback = config[:SSLTmpDhCallback]
       ctx.verify_mode = config[:SSLVerifyClient]
       ctx.verify_depth = config[:SSLVerifyDepth]
-      ctx.verify_callback = config[:SSLVerifyCallback]
-      ctx.servername_cb = config[:SSLServerNameCallback] || proc { |args| ssl_servername_callback(*args) }
       ctx.timeout = config[:SSLTimeout]
       ctx.options = config[:SSLOptions]
       ctx.ciphers = config[:SSLCiphers]
       ctx
     end
-
-    ##
-    # ServerNameIndication callback
-
-    def ssl_servername_callback(sslsocket, hostname = nil)
-      # default
-    end
-
   end
 end

@@ -226,56 +226,6 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     assert_eql?(host10, host1.lookup_server(Req.new(local, portz, namez)))
   end
 
-  def test_callbacks
-    accepted = started = stopped = 0
-    requested0 = requested1 = 0
-    config = {
-      :ServerName => "localhost",
-      :AcceptCallback => Proc.new{ accepted += 1 },
-      :StartCallback => Proc.new{ started += 1 },
-      :StopCallback => Proc.new{ stopped += 1 },
-      :RequestCallback => Proc.new{|req, res| requested0 += 1 },
-    }
-    log_tester = lambda {|log, access_log|
-      assert(log.find {|s| %r{ERROR `/' not found\.} =~ s })
-      assert_equal([], log.reject {|s| %r{ERROR `/' not found\.} =~ s })
-    }
-    TestWEBrick.start_httpserver(config, log_tester){|server, addr, port, log|
-      vhost_config = {
-        :ServerName => "myhostname",
-        :BindAddress => addr,
-        :Port => port,
-        :DoNotListen => true,
-        :Logger => NoLog,
-        :AccessLog => [],
-        :RequestCallback => Proc.new{|req, res| requested1 += 1 },
-      }
-      server.virtual_host(WEBrick::HTTPServer.new(vhost_config))
-
-      Thread.pass while server.status != :Running
-      sleep 1 if defined?(RubyVM::MJIT) && RubyVM::MJIT.enabled? # server.status behaves unexpectedly with --jit-wait
-      assert_equal(1, started, log.call)
-      assert_equal(0, stopped, log.call)
-      assert_equal(0, accepted, log.call)
-
-      http = Net::HTTP.new(addr, port)
-      req = Net::HTTP::Get.new("/")
-      req["Host"] = "myhostname:#{port}"
-      http.request(req){|res| assert_equal("404", res.code, log.call)}
-      http.request(req){|res| assert_equal("404", res.code, log.call)}
-      http.request(req){|res| assert_equal("404", res.code, log.call)}
-      req["Host"] = "localhost:#{port}"
-      http.request(req){|res| assert_equal("404", res.code, log.call)}
-      http.request(req){|res| assert_equal("404", res.code, log.call)}
-      http.request(req){|res| assert_equal("404", res.code, log.call)}
-      assert_equal(6, accepted, log.call)
-      assert_equal(3, requested0, log.call)
-      assert_equal(3, requested1, log.call)
-    }
-    assert_equal(started, 1)
-    assert_equal(stopped, 1)
-  end
-
   class CustomRequest < ::WEBrick::HTTPRequest; end
   class CustomResponse < ::WEBrick::HTTPResponse; end
   class CustomServer < ::WEBrick::HTTPServer
@@ -400,29 +350,6 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
         flunk('corrupted response')
       end
     }
-  end
-
-  def test_request_handler_callback_is_deprecated
-    requested = 0
-    config = {
-      :ServerName => "localhost",
-      :RequestHandler => Proc.new{|req, res| requested += 1 },
-    }
-    log_tester = lambda {|log, access_log|
-      assert_equal(2, log.length)
-      assert_match(/WARN  :RequestHandler is deprecated, please use :RequestCallback/, log[0])
-      assert_match(%r{ERROR `/' not found\.}, log[1])
-    }
-    TestWEBrick.start_httpserver(config, log_tester){|server, addr, port, log|
-      Thread.pass while server.status != :Running
-
-      http = Net::HTTP.new(addr, port)
-      req = Net::HTTP::Get.new("/")
-      req["Host"] = "localhost:#{port}"
-      http.request(req){|res| assert_equal("404", res.code, log.call)}
-      assert_match(%r{:RequestHandler is deprecated, please use :RequestCallback$}, log.call, log.call)
-    }
-    assert_equal(1, requested)
   end
 
   def test_shutdown_with_busy_keepalive_connection

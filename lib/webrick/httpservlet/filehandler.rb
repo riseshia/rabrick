@@ -310,12 +310,10 @@ module WEBrick
         raise HTTPStatus::NotFound, "`#{req.path}' not found." unless @root
         if set_filename(req, res)
           handler = get_handler(req, res)
-          call_callback(:HandlerCallback, req, res)
           h = handler.get_instance(@config, res.filename)
           h.service(req, res)
           return true
         end
-        call_callback(:HandlerCallback, req, res)
         return false
       end
 
@@ -342,7 +340,6 @@ module WEBrick
           break if base == "/"
           break unless File.directory?(File.expand_path(res.filename + base))
           shift_path_info(req, res, path_info)
-          call_callback(:DirectoryCallback, req, res)
         end
 
         if base = path_info.first
@@ -350,13 +347,11 @@ module WEBrick
           if base == "/"
             if file = search_index_file(req, res)
               shift_path_info(req, res, path_info, file)
-              call_callback(:FileCallback, req, res)
               return true
             end
             shift_path_info(req, res, path_info)
           elsif file = search_file(req, res, base)
             shift_path_info(req, res, path_info, file)
-            call_callback(:FileCallback, req, res)
             return true
           else
             raise HTTPStatus::NotFound, "`#{req.path}' not found."
@@ -411,12 +406,6 @@ module WEBrick
           }
         end
         return nil
-      end
-
-      def call_callback(callback_name, req, res)
-        if cb = @options[callback_name]
-          cb.call(req, res)
-        end
       end
 
       def windows_ambiguous_name?(name)

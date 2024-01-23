@@ -37,9 +37,6 @@ module WEBrick
                          "(Ruby/#{RUBY_VERSION}/#{RUBY_RELEASE_DATE})",
       :TempDir        => ENV['TMPDIR']||ENV['TMP']||ENV['TEMP']||'/tmp',
       :DoNotListen    => false,
-      :StartCallback  => nil,
-      :StopCallback   => nil,
-      :AcceptCallback => nil,
       :DoNotReverseLookup => true,
       :ShutdownSocketWithoutClose => false,
     )
@@ -54,7 +51,6 @@ module WEBrick
       :DirectoryIndex => ["index.html","index.htm","index.cgi","index.rhtml"],
       :DocumentRoot   => nil,
       :DocumentRootOptions => { :FancyIndexing => true },
-      :RequestCallback => nil,
       :ServerAlias    => nil,
       :InputBufferSize  => 65536, # input buffer size in reading request body
       :OutputBufferSize => 65536, # output buffer size in sending File or IO
@@ -79,15 +75,8 @@ module WEBrick
     #
     # :AcceptableLanguages::
     #   Array of languages allowed for accept-language.  There is no default
-    # :DirectoryCallback::
-    #   Allows preprocessing of directory requests.  There is no default
-    #   callback.
     # :FancyIndexing::
     #   If true, show an index for directories.  The default is true.
-    # :FileCallback::
-    #   Allows preprocessing of file requests.  There is no default callback.
-    # :HandlerCallback::
-    #   Allows preprocessing of requests.  There is no default callback.
     # :HandlerTable::
     #   Maps file suffixes to file handlers.  DefaultFileHandler is used by
     #   default but any servlet can be used.
@@ -102,9 +91,6 @@ module WEBrick
       :NondisclosureName => [".ht*", "*~"],
       :FancyIndexing     => false,
       :HandlerTable      => {},
-      :HandlerCallback   => nil,
-      :DirectoryCallback => nil,
-      :FileCallback      => nil,
       :UserDir           => nil,  # e.g. "public_html"
       :AcceptableLanguages => []  # ["en", "ja", ... ]
     }

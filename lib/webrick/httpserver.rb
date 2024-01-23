@@ -36,8 +36,6 @@ module WEBrick
     # :DocumentRootOptions:: Options for the default HTTPServlet::FileHandler
     # :HTTPVersion:: The HTTP version of this server
     # :Port:: Port to listen on
-    # :RequestCallback:: Called with a request and response before each
-    #                    request is serviced.
     # :RequestTimeout:: Maximum time to wait between requests
     # :ServerAlias:: Array of alternate names for this server for virtual
     #                hosting
@@ -86,13 +84,6 @@ module WEBrick
           res.request_http_version = req.http_version
           res.keep_alive = req.keep_alive?
           server = lookup_server(req) || self
-          if callback = server[:RequestCallback]
-            callback.call(req, res)
-          elsif callback = server[:RequestHandler]
-            msg = ":RequestHandler is deprecated, please use :RequestCallback"
-            @logger.warn(msg)
-            callback.call(req, res)
-          end
           server.service(req, res)
         rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => ex
           res.set_error(ex)
