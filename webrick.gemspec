@@ -55,16 +55,16 @@ Gem::Specification.new do |s|
     "lib/webrick/version.rb",
     "webrick.gemspec",
   ]
-  s.required_ruby_version = ">= 2.4.0"
+  s.required_ruby_version = ">= 3.2.0"
 
-  s.authors = ["TAKAHASHI Masayoshi", "GOTOU YUUZOU", "Eric Wong"]
-  s.email = [nil, nil, 'normal@ruby-lang.org']
-  s.homepage = "https://github.com/ruby/webrick"
+  s.authors = ["Shia"]
+  s.email = ["rise.shia@gmail.com"]
+  s.homepage = "https://github.com/riseshia/rabrick"
   s.licenses = ["Ruby", "BSD-2-Clause"]
 
   if s.respond_to?(:metadata=)
     s.metadata = {
-      "bug_tracker_uri" => "https://github.com/ruby/webrick/issues",
+      "bug_tracker_uri" => "https://github.com/riseshia/webrick/issues",
     }
   end
 end
