@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpserver.rb -- HTTPServer Class
 #
@@ -41,9 +42,9 @@ module WEBrick
     #                hosting
     # :ServerName:: Name for this server for virtual hosting
 
-    def initialize(config={}, default=Config::HTTP)
+    def initialize(config = {}, default = Config::HTTP)
       super(config, default)
-      @http_version = HTTPVersion::convert(@config[:HTTPVersion])
+      @http_version = HTTPVersion.convert(@config[:HTTPVersion])
 
       @mount_tab = MountTable.new
       if @config[:DocumentRoot]
@@ -53,12 +54,12 @@ module WEBrick
 
       unless @config[:AccessLog]
         @config[:AccessLog] = [
-          [ $stderr, AccessLog::COMMON_LOG_FORMAT ],
-          [ $stderr, AccessLog::REFERER_LOG_FORMAT ]
+          [$stderr, AccessLog::COMMON_LOG_FORMAT],
+          [$stderr, AccessLog::REFERER_LOG_FORMAT]
         ]
       end
 
-      @virtual_hosts = Array.new
+      @virtual_hosts = []
     end
 
     ##
@@ -74,10 +75,12 @@ module WEBrick
           while timeout > 0
             break if sock.to_io.wait_readable(0.5)
             break if @status != :Running
+
             timeout -= 0.5
           end
           raise HTTPStatus::EOFError if timeout <= 0 || @status != :Running
           raise HTTPStatus::EOFError if sock.eof?
+
           req.parse(sock)
           res.request_method = req.request_method
           res.request_uri = req.request_uri
@@ -85,16 +88,16 @@ module WEBrick
           res.keep_alive = req.keep_alive?
           server = lookup_server(req) || self
           server.service(req, res)
-        rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => ex
-          res.set_error(ex)
-        rescue HTTPStatus::Error => ex
-          @logger.error(ex.message)
-          res.set_error(ex)
-        rescue HTTPStatus::Status => ex
-          res.status = ex.code
-        rescue StandardError => ex
-          @logger.error(ex)
-          res.set_error(ex, true)
+        rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => e
+          res.set_error(e)
+        rescue HTTPStatus::Error => e
+          @logger.error(e.message)
+          res.set_error(e)
+        rescue HTTPStatus::Status => e
+          res.status = e.code
+        rescue StandardError => e
+          @logger.error(e)
+          res.set_error(e, true)
         ensure
           if req.request_line
             if req.keep_alive? && res.keep_alive?
@@ -124,6 +127,7 @@ module WEBrick
 
       servlet, options, script_name, path_info = search_servlet(req.path)
       raise HTTPStatus::NotFound, "`#{req.path}' not found." unless servlet
+
       req.script_name = script_name
       req.path_info = path_info
       si = servlet.get_instance(self, *options)
@@ -135,7 +139,7 @@ module WEBrick
     # The default OPTIONS request handler says GET, HEAD, POST and OPTIONS
     # requests are allowed.
 
-    def do_OPTIONS(req, res)
+    def do_OPTIONS(_req, res)
       res["allow"] = "GET,HEAD,POST,OPTIONS"
     end
 
@@ -144,17 +148,18 @@ module WEBrick
     # time
 
     def mount(dir, servlet, *options)
-      @logger.debug(sprintf("%s is mounted on %s.", servlet.inspect, dir))
-      @mount_tab[dir] = [ servlet, options ]
+      @logger.debug(format("%s is mounted on %s.", servlet.inspect, dir))
+      @mount_tab[dir] = [servlet, options]
     end
 
     ##
     # Mounts +proc+ or +block+ on +dir+ and calls it with a
     # WEBrick::HTTPRequest and WEBrick::HTTPResponse
 
-    def mount_proc(dir, proc=nil, &block)
+    def mount_proc(dir, proc = nil, &block)
       proc ||= block
       raise HTTPServerError, "must pass a proc or block" unless proc
+
       mount(dir, HTTPServlet::ProcHandler.new(proc))
     end
 
@@ -162,7 +167,7 @@ module WEBrick
     # Unmounts +dir+
 
     def unmount(dir)
-      @logger.debug(sprintf("unmount %s.", dir))
+      @logger.debug(format("unmount %s.", dir))
       @mount_tab.delete(dir)
     end
     alias umount unmount
@@ -174,7 +179,7 @@ module WEBrick
       script_name, path_info = @mount_tab.scan(path)
       servlet, options = @mount_tab[script_name]
       if servlet
-        [ servlet, options, script_name, path_info ]
+        [servlet, options, script_name, path_info]
       end
     end
 
@@ -183,7 +188,7 @@ module WEBrick
 
     def virtual_host(server)
       @virtual_hosts << server
-      @virtual_hosts = @virtual_hosts.sort_by{|s|
+      @virtual_hosts = @virtual_hosts.sort_by { |s|
         num = 0
         num -= 4 if s[:BindAddress]
         num -= 2 if s[:Port]
@@ -196,11 +201,11 @@ module WEBrick
     # Finds the appropriate virtual host to handle +req+
 
     def lookup_server(req)
-      @virtual_hosts.find{|s|
+      @virtual_hosts.find { |s|
         (s[:BindAddress].nil? || req.addr[3] == s[:BindAddress]) &&
-        (s[:Port].nil?        || req.port == s[:Port])           &&
-        ((s[:ServerName].nil?  || req.host == s[:ServerName]) ||
-         (!s[:ServerAlias].nil? && s[:ServerAlias].find{|h| h === req.host}))
+          (s[:Port].nil?        || req.port == s[:Port]) &&
+          ((s[:ServerName].nil? || req.host == s[:ServerName]) ||
+           (!s[:ServerAlias].nil? && s[:ServerAlias].find { |h| h === req.host }))
       }
     end
 
@@ -209,9 +214,9 @@ module WEBrick
     # server name.
 
     def access_log(config, req, res)
-      param = AccessLog::setup_params(config, req, res)
-      @config[:AccessLog].each{|logger, fmt|
-        logger << AccessLog::format(fmt+"\n", param)
+      param = AccessLog.setup_params(config, req, res)
+      @config[:AccessLog].each { |logger, fmt|
+        logger << AccessLog.format(fmt + "\n", param)
       }
     end
 
@@ -237,7 +242,7 @@ module WEBrick
 
     class MountTable # :nodoc:
       def initialize
-        @tab = Hash.new
+        @tab = {}
         compile
       end
 
@@ -250,7 +255,6 @@ module WEBrick
         dir = normalize(dir)
         @tab[dir] = val
         compile
-        val
       end
 
       def delete(dir)
@@ -262,7 +266,7 @@ module WEBrick
 
       def scan(path)
         @scanner =~ path
-        [ $&, $' ]
+        [::Regexp.last_match(0), ::Regexp.last_match.post_match]
       end
 
       private
@@ -271,13 +275,13 @@ module WEBrick
         k = @tab.keys
         k.sort!
         k.reverse!
-        k.collect!{|path| Regexp.escape(path) }
-        @scanner = Regexp.new("\\A(" + k.join("|") +")(?=/|\\z)")
+        k.collect! { |path| Regexp.escape(path) }
+        @scanner = Regexp.new("\\A(" + k.join("|") + ")(?=/|\\z)")
       end
 
       def normalize(dir)
         ret = dir ? dir.dup : +""
-        ret.sub!(%r|/+\z|, "")
+        ret.sub!(%r{/+\z}, "")
         ret
       end
     end

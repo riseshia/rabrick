@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpauth/basicauth.rb -- HTTP basic access authentication
 #
@@ -14,7 +15,6 @@ require_relative 'authenticator'
 
 module WEBrick
   module HTTPAuth
-
     ##
     # Basic Authentication for WEBrick
     #
@@ -40,9 +40,9 @@ module WEBrick
       ##
       # Used by UserDB to create a basic password entry
 
-      def self.make_passwd(realm, user, pass)
+      def self.make_passwd(_realm, _user, pass)
         pass ||= ""
-        pass.crypt(Utils::random_string(2))
+        pass.crypt(Utils.random_string(2))
       end
 
       attr_reader :realm, :userdb, :logger
@@ -58,7 +58,7 @@ module WEBrick
       # :UserDB:: A database of usernames and passwords.
       #           A WEBrick::HTTPAuth::Htpasswd instance should be used.
 
-      def initialize(config, default=Config::BasicAuth)
+      def initialize(config, default = Config::BasicAuth)
         check_init(config)
         @config = default.dup.update(config)
       end
@@ -71,7 +71,7 @@ module WEBrick
         unless basic_credentials = check_scheme(req)
           challenge(req, res)
         end
-        userid, password = basic_credentials.unpack("m*")[0].split(":", 2)
+        userid, password = basic_credentials.unpack1("m*").split(":", 2)
         password ||= ""
         if userid.empty?
           error("user id was not given.")
@@ -82,12 +82,12 @@ module WEBrick
           challenge(req, res)
         end
 
-        case encpass
-        when /\A\$2[aby]\$/
-          password_matches = BCrypt::Password.new(encpass.sub(/\A\$2[aby]\$/, '$2a$')) == password
-        else
-          password_matches = password.crypt(encpass) == encpass
-        end
+        password_matches = case encpass
+                           when /\A\$2[aby]\$/
+                             BCrypt::Password.new(encpass.sub(/\A\$2[aby]\$/, '$2a$')) == password
+                           else
+                             password.crypt(encpass) == encpass
+                           end
 
         unless password_matches
           error("%s: password unmatch.", userid)
@@ -100,7 +100,7 @@ module WEBrick
       ##
       # Returns a challenge response which asks for authentication information
 
-      def challenge(req, res)
+      def challenge(_req, res)
         res[@response_field] = "#{@auth_scheme} realm=\"#{@realm}\""
         raise @auth_exception
       end

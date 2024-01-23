@@ -1,23 +1,24 @@
 # frozen_string_literal: false
+
 require "test/unit"
 require "webrick/cookie"
 
 class TestWEBrickCookie < Test::Unit::TestCase
   def test_new
-    cookie = WEBrick::Cookie.new("foo","bar")
+    cookie = WEBrick::Cookie.new("foo", "bar")
     assert_equal("foo", cookie.name)
     assert_equal("bar", cookie.value)
     assert_equal("foo=bar", cookie.to_s)
   end
 
   def test_time
-    cookie = WEBrick::Cookie.new("foo","bar")
-    t = 1000000000
+    cookie = WEBrick::Cookie.new("foo", "bar")
+    t = 1_000_000_000
     cookie.max_age = t
     assert_match(t.to_s, cookie.to_s)
 
-    cookie = WEBrick::Cookie.new("foo","bar")
-    t = Time.at(1000000000)
+    cookie = WEBrick::Cookie.new("foo", "bar")
+    t = Time.at(1_000_000_000)
     cookie.expires = t
     assert_equal(Time, cookie.expires.class)
     assert_equal(t, cookie.expires)

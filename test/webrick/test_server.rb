@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "test/unit"
 require "tempfile"
 require "webrick"
@@ -14,12 +15,16 @@ class TestWEBrickServer < Test::Unit::TestCase
   end
 
   def test_server
-    TestWEBrick.start_server(Echo){|server, addr, port, log|
-      TCPSocket.open(addr, port){|sock|
-        sock.puts("foo"); assert_equal("foo\n", sock.gets, log.call)
-        sock.puts("bar"); assert_equal("bar\n", sock.gets, log.call)
-        sock.puts("baz"); assert_equal("baz\n", sock.gets, log.call)
-        sock.puts("qux"); assert_equal("qux\n", sock.gets, log.call)
+    TestWEBrick.start_server(Echo) { |_server, addr, port, log|
+      TCPSocket.open(addr, port) { |sock|
+        sock.puts("foo")
+        assert_equal("foo\n", sock.gets, log.call)
+        sock.puts("bar")
+        assert_equal("bar\n", sock.gets, log.call)
+        sock.puts("baz")
+        assert_equal("baz\n", sock.gets, log.call)
+        sock.puts("qux")
+        assert_equal("qux\n", sock.gets, log.call)
       }
     }
   end
@@ -35,14 +40,16 @@ class TestWEBrickServer < Test::Unit::TestCase
       def listener.to_io # IO.select invokes #to_io.
         raise SignalException, 'SIGTERM' # simulate signal in main thread
       end
+
       def listener.shutdown
       end
+
       def listener.close
       end
 
       server = WEBrick::HTTPServer.new({
         :BindAddress => "127.0.0.1", :Port => 0,
-        :Logger => logger,
+        :Logger => logger
       })
       server.listeners[0].close
       server.listeners[0] = listener
@@ -56,24 +63,22 @@ class TestWEBrickServer < Test::Unit::TestCase
   end
 
   def test_daemon
-    begin
-      r, w = IO.pipe
-      pid1 = Process.fork{
-        r.close
-        WEBrick::Daemon.start
-        w.puts(Process.pid)
-        sleep 10
-      }
-      pid2 = r.gets.to_i
-      assert(Process.kill(:KILL, pid2))
-      assert_not_equal(pid1, pid2)
-    rescue NotImplementedError
-      # snip this test
-    ensure
-      Process.wait(pid1) if pid1
+    r, w = IO.pipe
+    pid1 = Process.fork {
       r.close
-      w.close
-    end
+      WEBrick::Daemon.start
+      w.puts(Process.pid)
+      sleep 10
+    }
+    pid2 = r.gets.to_i
+    assert(Process.kill(:KILL, pid2))
+    assert_not_equal(pid1, pid2)
+  rescue NotImplementedError
+    # snip this test
+  ensure
+    Process.wait(pid1) if pid1
+    r.close
+    w.close
   end
 
   def test_restart_after_shutdown
@@ -83,12 +88,12 @@ class TestWEBrickServer < Test::Unit::TestCase
     config = {
       :BindAddress => address,
       :Port => port,
-      :Logger => WEBrick::Log.new(log, WEBrick::BasicLog::WARN),
+      :Logger => WEBrick::Log.new(log, WEBrick::BasicLog::WARN)
     }
     server = Echo.new(config)
-    client_proc = lambda {|str|
+    client_proc = lambda { |str|
       begin
-        ret = server.listeners.first.connect_address.connect {|s|
+        ret = server.listeners.first.connect_address.connect { |s|
           s.write(str)
           s.close_write
           s.read
@@ -117,12 +122,13 @@ class TestWEBrickServer < Test::Unit::TestCase
       end
     end
     client_thread = nil
-    wakeup = -> {client_thread.wakeup}
+    wakeup = -> { client_thread.wakeup }
     warn_flunk = WEBrick::Log.new(log, WEBrick::BasicLog::WARN)
     server = WEBrick::HTTPServer.new(
       :BindAddress => '0.0.0.0',
       :Port => 0,
-      :Logger => warn_flunk)
+      :Logger => warn_flunk
+    )
     2.times {
       server_thread = Thread.start {
         server.start
@@ -139,13 +145,13 @@ class TestWEBrickServer < Test::Unit::TestCase
   def test_port_numbers
     config = {
       :BindAddress => '0.0.0.0',
-      :Logger => WEBrick::Log.new([], WEBrick::BasicLog::WARN),
+      :Logger => WEBrick::Log.new([], WEBrick::BasicLog::WARN)
     }
 
     ports = [0, "0"]
 
     ports.each do |port|
-      config[:Port]= port
+      config[:Port] = port
       server = WEBrick::GenericServer.new(config)
       server_thread = Thread.start { server.start }
       client_thread = Thread.start {
@@ -159,7 +165,7 @@ class TestWEBrickServer < Test::Unit::TestCase
     end
 
     assert_raise(ArgumentError) do
-      config[:Port]= "FOO"
+      config[:Port] = "FOO"
       WEBrick::GenericServer.new(config)
     end
   end

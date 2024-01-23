@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpauth/htdigest.rb -- Apache compatible htdigest file
 #
@@ -14,7 +15,6 @@ require 'tempfile'
 
 module WEBrick
   module HTTPAuth
-
     ##
     # Htdigest accesses apache-compatible digest password files.  Passwords are
     # matched to a realm where they are valid.  For security, the path for a
@@ -37,10 +37,10 @@ module WEBrick
       def initialize(path)
         @path = path
         @mtime = Time.at(0)
-        @digest = Hash.new
-        @mutex = Thread::Mutex::new
+        @digest = {}
+        @mutex = Thread::Mutex.new
         @auth_type = DigestAuth
-        File.open(@path,"a").close unless File.exist?(@path)
+        File.open(@path, "a").close unless File.exist?(@path)
         reload
       end
 
@@ -48,15 +48,15 @@ module WEBrick
       # Reloads passwords from the database
 
       def reload
-        mtime = File::mtime(@path)
+        mtime = File.mtime(@path)
         if mtime > @mtime
           @digest.clear
-          File.open(@path){|io|
+          File.open(@path) { |io|
             while line = io.gets
               line.chomp!
               user, realm, pass = line.split(/:/, 3)
               unless @digest[realm]
-                @digest[realm] = Hash.new
+                @digest[realm] = {}
               end
               @digest[realm][user] = pass
             end
@@ -69,14 +69,14 @@ module WEBrick
       # Flush the password database.  If +output+ is given the database will
       # be written there instead of to the original path.
 
-      def flush(output=nil)
+      def flush(output = nil)
         output ||= @path
-        tmp = Tempfile.create("htpasswd", File::dirname(output))
+        tmp = Tempfile.create("htpasswd", File.dirname(output))
         renamed = false
         begin
-          each{|item| tmp.puts(item.join(":")) }
+          each { |item| tmp.puts(item.join(":")) }
           tmp.close
-          File::rename(tmp.path, output)
+          File.rename(tmp.path, output)
           renamed = true
         ensure
           tmp.close
@@ -99,9 +99,9 @@ module WEBrick
       # Sets a password in the database for +user+ in +realm+ to +pass+.
 
       def set_passwd(realm, user, pass)
-        @mutex.synchronize{
+        @mutex.synchronize {
           unless @digest[realm]
-            @digest[realm] = Hash.new
+            @digest[realm] = {}
           end
           @digest[realm][user] = make_passwd(realm, user, pass)
         }
@@ -120,9 +120,9 @@ module WEBrick
       # Iterate passwords in the database.
 
       def each # :yields: [user, realm, password_hash]
-        @digest.keys.sort.each{|realm|
+        @digest.keys.sort.each { |realm|
           hash = @digest[realm]
-          hash.keys.sort.each{|user|
+          hash.keys.sort.each { |user|
             yield([user, realm, hash[user]])
           }
         }

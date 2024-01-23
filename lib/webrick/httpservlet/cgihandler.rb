@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # cgihandler.rb -- CGIHandler Class
 #
@@ -16,7 +17,6 @@ require_relative 'abstract'
 
 module WEBrick
   module HTTPServlet
-
     ##
     # Servlet for handling CGI scripts
     #
@@ -38,17 +38,17 @@ module WEBrick
         @script_filename = name
         @tempdir = server[:TempDir]
         interpreter = server[:CGIInterpreter]
-        if interpreter.is_a?(Array)
-          @cgicmd = CGIRunnerArray + interpreter
-        else
-          @cgicmd = "#{CGIRunner} #{interpreter}"
-        end
+        @cgicmd = if interpreter.is_a?(Array)
+                    CGIRunnerArray + interpreter
+                  else
+                    "#{CGIRunner} #{interpreter}"
+                  end
       end
 
       # :stopdoc:
 
       def do_GET(req, res)
-        cgi_in = IO::popen(@cgicmd, "wb")
+        cgi_in = IO.popen(@cgicmd, "wb")
         cgi_out = Tempfile.new("webrick.cgiout.", @tempdir, mode: IO::BINARY)
         cgi_out.set_encoding("ASCII-8BIT")
         cgi_err = Tempfile.new("webrick.cgierr.", @tempdir, mode: IO::BINARY)
@@ -78,10 +78,8 @@ module WEBrick
           sleep 0.1 if /mswin|bccwin|mingw/ =~ RUBY_PLATFORM
           data = cgi_out.read
           cgi_out.close(true)
-          if errmsg = cgi_err.read
-            if errmsg.bytesize > 0
-              @logger.error("CGIHandler: #{@script_filename}:\n" + errmsg)
-            end
+          if (errmsg = cgi_err.read) && (errmsg.bytesize > 0)
+            @logger.error("CGIHandler: #{@script_filename}:\n" + errmsg)
           end
           cgi_err.close(true)
         end
@@ -90,30 +88,32 @@ module WEBrick
           @logger.error("CGIHandler: #{@script_filename} exit with #{status}")
         end
 
-        data = "" unless data
+        data ||= ""
         raw_header, body = data.split(/^[\xd\xa]+/, 2)
-        raise HTTPStatus::InternalServerError,
-          "Premature end of script headers: #{@script_filename}" if body.nil?
+        if body.nil?
+          raise HTTPStatus::InternalServerError,
+                "Premature end of script headers: #{@script_filename}"
+        end
 
         begin
-          header = HTTPUtils::parse_header(raw_header)
+          header = HTTPUtils.parse_header(raw_header)
           if /^(\d+)/ =~ header['status'][0]
-            res.status = $1.to_i
+            res.status = ::Regexp.last_match(1).to_i
             header.delete('status')
           end
-          if header.has_key?('location')
+          if header.has_key?('location') && !(300...400).include?(res.status)
             # RFC 3875 6.2.3, 6.2.4
-            res.status = 302 unless (300...400) === res.status
+            res.status = 302
           end
           if header.has_key?('set-cookie')
-            header['set-cookie'].each{|k|
+            header['set-cookie'].each { |k|
               res.cookies << Cookie.parse_set_cookie(k)
             }
             header.delete('set-cookie')
           end
-          header.each{|key, val| res[key] = val.join(", ") }
-        rescue => ex
-          raise HTTPStatus::InternalServerError, ex.message
+          header.each { |key, val| res[key] = val.join(", ") }
+        rescue StandardError => e
+          raise HTTPStatus::InternalServerError, e.message
         end
         res.body = body
       end
@@ -121,6 +121,5 @@ module WEBrick
 
       # :startdoc:
     end
-
   end
 end

@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "test/unit"
 require "webrick"
 require_relative "utils"
@@ -18,9 +19,9 @@ class TestDoNotReverseLookup < Test::Unit::TestCase
 
   def do_not_reverse_lookup?(config)
     result = nil
-    TestWEBrick.start_server(DNRL, config) do |server, addr, port, log|
+    TestWEBrick.start_server(DNRL, config) do |_server, addr, port, _log|
       TCPSocket.open(addr, port) do |sock|
-        result = {'true' => true, 'false' => false}[sock.gets]
+        result = { 'true' => true, 'false' => false }[sock.gets]
       end
     end
     result

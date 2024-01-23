@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #--
 # accesslog.rb -- Access log handling utilities
 #
@@ -9,7 +10,6 @@
 # $IPR: accesslog.rb,v 1.1 2002/10/01 17:16:32 gotoyuzo Exp $
 
 module WEBrick
-
   ##
   # AccessLog provides logging to various files in various formats.
   #
@@ -28,7 +28,6 @@ module WEBrick
   # AccessLog::setup_params for a list of supported options
 
   module AccessLog
-
     ##
     # Raised if a parameter such as %e, %i, %o or %n is used without fetching
     # a specific field.
@@ -53,7 +52,7 @@ module WEBrick
     ##
     # Referer Log Format
 
-    REFERER_LOG_FORMAT  = "%{Referer}i -> %U"
+    REFERER_LOG_FORMAT  = "%<Referer>si -> %U"
 
     ##
     # User-Agent Log Format
@@ -63,7 +62,7 @@ module WEBrick
     ##
     # Combined Log Format
 
-    COMBINED_LOG_FORMAT = "#{CLF} \"%{Referer}i\" \"%{User-agent}i\""
+    COMBINED_LOG_FORMAT = "#{CLF} \"%<Referer>si\" \"%{User-agent}i\""
 
     module_function
 
@@ -107,7 +106,7 @@ module WEBrick
       params["p"] = req.port
       params["q"] = req.query_string
       params["r"] = req.request_line.sub(/\x0d?\x0a\z/o, '')
-      params["s"] = res.status       # won't support "%>s"
+      params["s"] = res.status # won't support "%>s"
       params["t"] = req.request_time
       params["T"] = Time.now - req.request_time
       params["u"] = req.user || "-"
@@ -121,27 +120,30 @@ module WEBrick
     # setup_params.
 
     def format(format_string, params)
-      format_string.gsub(/\%(?:\{(.*?)\})?>?([a-zA-Z%])/){
-         param, spec = $1, $2
-         case spec[0]
-         when ?e, ?i, ?n, ?o
-           raise AccessLogError,
-             "parameter is required for \"#{spec}\"" unless param
-           (param = params[spec][param]) ? escape(param) : "-"
-         when ?t
-           params[spec].strftime(param || CLF_TIME_FORMAT)
-         when ?p
-           case param
-           when 'remote'
-             escape(params["i"].peeraddr[1].to_s)
-           else
-             escape(params["p"].to_s)
-           end
-         when ?%
-           "%"
-         else
-           escape(params[spec].to_s)
-         end
+      format_string.gsub(/%(?:\{(.*?)\})?>?([a-zA-Z%])/) {
+        param = ::Regexp.last_match(1)
+        spec = ::Regexp.last_match(2)
+        case spec[0]
+        when 'e', 'i', 'n', 'o'
+          unless param
+            raise AccessLogError,
+                  "parameter is required for \"#{spec}\""
+          end
+          (param = params[spec][param]) ? escape(param) : "-"
+        when 't'
+          params[spec].strftime(param || CLF_TIME_FORMAT)
+        when 'p'
+          case param
+          when 'remote'
+            escape(params["i"].peeraddr[1].to_s)
+          else
+            escape(params["p"].to_s)
+          end
+        when '%'
+          "%"
+        else
+          escape(params[spec].to_s)
+        end
       }
     end
 
@@ -149,7 +151,7 @@ module WEBrick
     # Escapes control characters in +data+
 
     def escape(data)
-      data = data.gsub(/[[:cntrl:]\\]+/) {$&.dump[1...-1]}
+      data = data.gsub(/[[:cntrl:]\\]+/) { ::Regexp.last_match(0).dump[1...-1] }
       data.untaint if RUBY_VERSION < '2.7'
       data
     end

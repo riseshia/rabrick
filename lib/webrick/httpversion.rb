@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #--
 # HTTPVersion.rb -- presentation of HTTP version
 #
@@ -9,7 +10,6 @@
 # $IPR: httpversion.rb,v 1.5 2002/09/21 12:23:37 gotoyuzo Exp $
 
 module WEBrick
-
   ##
   # Represents an HTTP protocol version
 
@@ -19,12 +19,10 @@ module WEBrick
     ##
     # The major protocol version number
 
-    attr_accessor :major
+    attr_accessor :major, :minor
 
     ##
     # The minor protocol version number
-
-    attr_accessor :minor
 
     ##
     # Converts +version+ into an HTTPVersion
@@ -39,15 +37,17 @@ module WEBrick
     def initialize(version)
       case version
       when HTTPVersion
-        @major, @minor = version.major, version.minor
+        @major = version.major
+        @minor = version.minor
       when String
         if /^(\d+)\.(\d+)$/ =~ version
-          @major, @minor = $1.to_i, $2.to_i
+          @major = ::Regexp.last_match(1).to_i
+          @minor = ::Regexp.last_match(2).to_i
         end
       end
       if @major.nil? || @minor.nil?
         raise ArgumentError,
-          format("cannot convert %s into %s", version.class, self.class)
+              format("cannot convert %s into %s", version.class, self.class)
       end
     end
 
@@ -62,7 +62,8 @@ module WEBrick
       if (ret = @major <=> other.major) == 0
         return @minor <=> other.minor
       end
-      return ret
+
+      ret
     end
 
     ##

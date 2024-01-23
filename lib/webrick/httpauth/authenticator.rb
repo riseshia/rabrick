@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #--
 # httpauth/authenticator.rb -- Authenticator mix-in module.
 #
@@ -10,13 +11,11 @@
 
 module WEBrick
   module HTTPAuth
-
     ##
     # Module providing generic support for both Digest and Basic
     # authentication schemes.
 
     module Authenticator
-
       RequestField      = "Authorization" # :nodoc:
       ResponseField     = "WWW-Authenticate" # :nodoc:
       ResponseInfoField = "Authentication-Info" # :nodoc:
@@ -30,17 +29,13 @@ module WEBrick
       ##
       # The realm this authenticator covers
 
-      attr_reader :realm
+      attr_reader :realm, :userdb, :logger
 
       ##
       # The user database for this authenticator
 
-      attr_reader :userdb
-
       ##
       # The logger for this authenticator
-
-      attr_reader :logger
 
       private
 
@@ -50,20 +45,20 @@ module WEBrick
       # Initializes the authenticator from +config+
 
       def check_init(config)
-        [:UserDB, :Realm].each{|sym|
+        %i[UserDB Realm].each { |sym|
           unless config[sym]
             raise ArgumentError, "Argument #{sym.inspect} missing."
           end
         }
         @realm     = config[:Realm]
         @userdb    = config[:UserDB]
-        @logger    = config[:Logger] || Log::new($stderr)
+        @logger    = config[:Logger] || Log.new($stderr)
         @reload_db = config[:AutoReloadUserDB]
-        @request_field   = self::class::RequestField
-        @response_field  = self::class::ResponseField
-        @resp_info_field = self::class::ResponseInfoField
-        @auth_exception  = self::class::AuthException
-        @auth_scheme     = self::class::AuthScheme
+        @request_field   = self.class::RequestField
+        @response_field  = self.class::ResponseField
+        @resp_info_field = self.class::ResponseInfoField
+        @auth_exception  = self.class::AuthException
+        @auth_scheme     = self.class::AuthScheme
       end
 
       ##
@@ -79,7 +74,7 @@ module WEBrick
           info("%s: %s", @request_field, credentials) if $DEBUG
           return nil
         end
-        return match.post_match
+        match.post_match
       end
 
       def log(meth, fmt, *args)

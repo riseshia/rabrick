@@ -16,19 +16,19 @@ class TestWEBrickSSLServer < Test::Unit::TestCase
   def test_self_signed_cert_server
     assert_self_signed_cert(
       :SSLEnable => true,
-      :SSLCertName => [["C", "JP"], ["O", "www.ruby-lang.org"], ["CN", "Ruby"]],
+      :SSLCertName => [["C", "JP"], ["O", "www.ruby-lang.org"], ["CN", "Ruby"]]
     )
   end
 
   def test_self_signed_cert_server_with_string
     assert_self_signed_cert(
       :SSLEnable => true,
-      :SSLCertName => "/C=JP/O=www.ruby-lang.org/CN=Ruby",
+      :SSLCertName => "/C=JP/O=www.ruby-lang.org/CN=Ruby"
     )
   end
 
   def assert_self_signed_cert(config)
-    TestWEBrick.start_server(Echo, config){|server, addr, port, log|
+    TestWEBrick.start_server(Echo, config) { |server, addr, port, log|
       io = TCPSocket.new(addr, port)
       sock = OpenSSL::SSL::SSLSocket.new(io)
       sock.connect
@@ -41,22 +41,20 @@ class TestWEBrickSSLServer < Test::Unit::TestCase
 
   def test_slow_connect
     poke = lambda do |io, msg|
-      begin
-        sock = OpenSSL::SSL::SSLSocket.new(io)
-        sock.connect
-        sock.puts(msg)
-        assert_equal "#{msg}\n", sock.gets, msg
-      ensure
-        sock&.close
-        io.close
-      end
+      sock = OpenSSL::SSL::SSLSocket.new(io)
+      sock.connect
+      sock.puts(msg)
+      assert_equal "#{msg}\n", sock.gets, msg
+    ensure
+      sock&.close
+      io.close
     end
     config = {
       :SSLEnable => true,
-      :SSLCertName => "/C=JP/O=www.ruby-lang.org/CN=Ruby",
+      :SSLCertName => "/C=JP/O=www.ruby-lang.org/CN=Ruby"
     }
     EnvUtil.timeout(10) do
-      TestWEBrick.start_server(Echo, config) do |server, addr, port, log|
+      TestWEBrick.start_server(Echo, config) do |_server, addr, port, _log|
         outer = TCPSocket.new(addr, port)
         inner = TCPSocket.new(addr, port)
         poke.call(inner, 'fast TLS negotiation')

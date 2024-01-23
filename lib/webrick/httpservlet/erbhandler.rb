@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # erbhandler.rb -- ERBHandler Class
 #
@@ -15,7 +16,6 @@ require 'erb'
 
 module WEBrick
   module HTTPServlet
-
     ##
     # ERBHandler evaluates an ERB file and returns the result.  This handler
     # is automatically used if there are .rhtml files in a directory served by
@@ -34,7 +34,6 @@ module WEBrick
     #   Query params <%= servlet_request.query.inspect %>
 
     class ERBHandler < AbstractServlet
-
       ##
       # Creates a new ERBHandler on +server+ that will evaluate and serve the
       # ERB file +name+
@@ -56,12 +55,12 @@ module WEBrick
           data = File.open(@script_filename, &:read)
           res.body = evaluate(ERB.new(data), req, res)
           res['content-type'] ||=
-            HTTPUtils::mime_type(@script_filename, @config[:MimeTypes])
+            HTTPUtils.mime_type(@script_filename, @config[:MimeTypes])
         rescue StandardError
           raise
-        rescue Exception => ex
-          @logger.error(ex)
-          raise HTTPStatus::InternalServerError, ex.message
+        rescue Exception => e
+          @logger.error(e)
+          raise HTTPStatus::InternalServerError, e.message
         end
       end
 
@@ -77,7 +76,7 @@ module WEBrick
       # local variables.
 
       def evaluate(erb, servlet_request, servlet_response)
-        Module.new.module_eval{
+        Module.new.module_eval {
           servlet_request.meta_vars
           servlet_request.query
           erb.result(binding)

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpauth/htgroup.rb -- Apache compatible htgroup file
 #
@@ -12,7 +13,6 @@ require 'tempfile'
 
 module WEBrick
   module HTTPAuth
-
     ##
     # Htgroup accesses apache-compatible group files.  Htgroup can be used to
     # provide group-based authentication for users.  Currently Htgroup is not
@@ -28,15 +28,14 @@ module WEBrick
     #   htgroup.members('superheroes').include? 'magneto' # => false
 
     class Htgroup
-
       ##
       # Open a group database at +path+
 
       def initialize(path)
         @path = path
         @mtime = Time.at(0)
-        @group = Hash.new
-        File.open(@path,"a").close unless File.exist?(@path)
+        @group = {}
+        File.open(@path, "a").close unless File.exist?(@path)
         reload
       end
 
@@ -44,9 +43,9 @@ module WEBrick
       # Reload groups from the database
 
       def reload
-        if (mtime = File::mtime(@path)) > @mtime
+        if (mtime = File.mtime(@path)) > @mtime
           @group.clear
-          File.open(@path){|io|
+          File.open(@path) { |io|
             while line = io.gets
               line.chomp!
               group, members = line.split(/:\s*/)
@@ -61,12 +60,12 @@ module WEBrick
       # Flush the group database.  If +output+ is given the database will be
       # written there instead of to the original path.
 
-      def flush(output=nil)
+      def flush(output = nil)
         output ||= @path
-        tmp = Tempfile.create("htgroup", File::dirname(output))
+        tmp = Tempfile.create("htgroup", File.dirname(output))
         begin
-          @group.keys.sort.each{|group|
-            tmp.puts(format("%s: %s", group, self.members(group).join(" ")))
+          @group.keys.sort.each { |group|
+            tmp.puts(format("%s: %s", group, members(group).join(" ")))
           }
         ensure
           tmp.close

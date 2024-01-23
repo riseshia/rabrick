@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # cgi_runner.rb -- CGI launcher.
 #
@@ -16,7 +17,7 @@ def sysread(io, size)
     buf << tmp
     size -= tmp.bytesize
   end
-  return buf
+  buf
 end
 
 STDIN.binmode
@@ -32,11 +33,11 @@ STDERR.reopen(File.open(err, "w"))
 len  = sysread(STDIN, 8).to_i
 dump = sysread(STDIN, len)
 hash = Marshal.restore(dump)
-ENV.keys.each{|name| ENV.delete(name) }
-hash.each{|k, v| ENV[k] = v if v }
+ENV.keys.each { |name| ENV.delete(name) }
+hash.each { |k, v| ENV[k] = v if v }
 
-dir = File::dirname(ENV["SCRIPT_FILENAME"])
-Dir::chdir dir
+dir = File.dirname(ENV["SCRIPT_FILENAME"])
+Dir.chdir dir
 
 if ARGV[0]
   argv = ARGV.dup

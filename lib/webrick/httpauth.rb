@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpauth.rb -- HTTP access authentication
 #
@@ -16,7 +17,6 @@ require_relative 'httpauth/htdigest'
 require_relative 'httpauth/htgroup'
 
 module WEBrick
-
   ##
   # HTTPAuth provides both basic and digest authentication.
   #
@@ -58,8 +58,8 @@ module WEBrick
                     block) # :nodoc:
       user = pass = nil
       if /^Basic\s+(.*)/o =~ req[req_field]
-        userpass = $1
-        user, pass = userpass.unpack("m*")[0].split(":", 2)
+        userpass = ::Regexp.last_match(1)
+        user, pass = userpass.unpack1("m*").split(":", 2)
       end
       if block.call(user, pass)
         req.user = user

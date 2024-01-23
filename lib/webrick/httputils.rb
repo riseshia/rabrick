@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httputils.rb -- HTTPUtils Module
 #
@@ -23,20 +24,21 @@ module WEBrick
   # This module is generally used internally by WEBrick
 
   module HTTPUtils
-
     ##
     # Normalizes a request path.  Raises an exception if the path cannot be
     # normalized.
 
     def normalize_path(path)
-      raise "abnormal path `#{path}'" if path[0] != ?/
+      raise "abnormal path `#{path}'" if path[0] != '/'
+
       ret = path.dup
 
       ret.gsub!(%r{/+}o, '/')                    # //      => /
-      while ret.sub!(%r'/\.(?:/|\Z)', '/'); end  # /.      => /
-      while ret.sub!(%r'/(?!\.\./)[^/]+/\.\.(?:/|\Z)', '/'); end # /foo/.. => /foo
+      while ret.sub!(%r{/\.(?:/|\Z)}, '/'); end  # /.      => /
+      while ret.sub!(%r{/(?!\.\./)[^/]+/\.\.(?:/|\Z)}, '/'); end # /foo/.. => /foo
 
       raise "abnormal path `#{path}'" if %r{/\.\.(/|\Z)} =~ ret
+
       ret
     end
     module_function :normalize_path
@@ -45,92 +47,94 @@ module WEBrick
     # Default mime types
 
     DefaultMimeTypes = {
-      "ai"    => "application/postscript",
-      "asc"   => "text/plain",
-      "avi"   => "video/x-msvideo",
-      "avif"  => "image/avif",
-      "bin"   => "application/octet-stream",
-      "bmp"   => "image/bmp",
+      "ai" => "application/postscript",
+      "asc" => "text/plain",
+      "avi" => "video/x-msvideo",
+      "avif" => "image/avif",
+      "bin" => "application/octet-stream",
+      "bmp" => "image/bmp",
       "class" => "application/octet-stream",
-      "cer"   => "application/pkix-cert",
-      "crl"   => "application/pkix-crl",
-      "crt"   => "application/x-x509-ca-cert",
-      "css"   => "text/css",
-      "dms"   => "application/octet-stream",
-      "doc"   => "application/msword",
-      "dvi"   => "application/x-dvi",
-      "eps"   => "application/postscript",
-      "etx"   => "text/x-setext",
-      "exe"   => "application/octet-stream",
-      "gif"   => "image/gif",
-      "htm"   => "text/html",
-      "html"  => "text/html",
-      "ico"   => "image/x-icon",
-      "jpe"   => "image/jpeg",
-      "jpeg"  => "image/jpeg",
-      "jpg"   => "image/jpeg",
-      "js"    => "application/javascript",
-      "json"  => "application/json",
-      "lha"   => "application/octet-stream",
-      "lzh"   => "application/octet-stream",
-      "mjs"   => "application/javascript",
-      "mov"   => "video/quicktime",
-      "mp4"   => "video/mp4",
-      "mpe"   => "video/mpeg",
-      "mpeg"  => "video/mpeg",
-      "mpg"   => "video/mpeg",
-      "otf"   => "font/otf",
-      "pbm"   => "image/x-portable-bitmap",
-      "pdf"   => "application/pdf",
-      "pgm"   => "image/x-portable-graymap",
-      "png"   => "image/png",
-      "pnm"   => "image/x-portable-anymap",
-      "ppm"   => "image/x-portable-pixmap",
-      "ppt"   => "application/vnd.ms-powerpoint",
-      "ps"    => "application/postscript",
-      "qt"    => "video/quicktime",
-      "ras"   => "image/x-cmu-raster",
-      "rb"    => "text/plain",
-      "rd"    => "text/plain",
-      "rtf"   => "application/rtf",
-      "sgm"   => "text/sgml",
-      "sgml"  => "text/sgml",
-      "svg"   => "image/svg+xml",
-      "tif"   => "image/tiff",
-      "tiff"  => "image/tiff",
-      "ttc"   => "font/collection",
-      "ttf"   => "font/ttf",
-      "txt"   => "text/plain",
-      "wasm"  => "application/wasm",
-      "webm"  => "video/webm",
+      "cer" => "application/pkix-cert",
+      "crl" => "application/pkix-crl",
+      "crt" => "application/x-x509-ca-cert",
+      "css" => "text/css",
+      "dms" => "application/octet-stream",
+      "doc" => "application/msword",
+      "dvi" => "application/x-dvi",
+      "eps" => "application/postscript",
+      "etx" => "text/x-setext",
+      "exe" => "application/octet-stream",
+      "gif" => "image/gif",
+      "htm" => "text/html",
+      "html" => "text/html",
+      "ico" => "image/x-icon",
+      "jpe" => "image/jpeg",
+      "jpeg" => "image/jpeg",
+      "jpg" => "image/jpeg",
+      "js" => "application/javascript",
+      "json" => "application/json",
+      "lha" => "application/octet-stream",
+      "lzh" => "application/octet-stream",
+      "mjs" => "application/javascript",
+      "mov" => "video/quicktime",
+      "mp4" => "video/mp4",
+      "mpe" => "video/mpeg",
+      "mpeg" => "video/mpeg",
+      "mpg" => "video/mpeg",
+      "otf" => "font/otf",
+      "pbm" => "image/x-portable-bitmap",
+      "pdf" => "application/pdf",
+      "pgm" => "image/x-portable-graymap",
+      "png" => "image/png",
+      "pnm" => "image/x-portable-anymap",
+      "ppm" => "image/x-portable-pixmap",
+      "ppt" => "application/vnd.ms-powerpoint",
+      "ps" => "application/postscript",
+      "qt" => "video/quicktime",
+      "ras" => "image/x-cmu-raster",
+      "rb" => "text/plain",
+      "rd" => "text/plain",
+      "rtf" => "application/rtf",
+      "sgm" => "text/sgml",
+      "sgml" => "text/sgml",
+      "svg" => "image/svg+xml",
+      "tif" => "image/tiff",
+      "tiff" => "image/tiff",
+      "ttc" => "font/collection",
+      "ttf" => "font/ttf",
+      "txt" => "text/plain",
+      "wasm" => "application/wasm",
+      "webm" => "video/webm",
       "webmanifest" => "application/manifest+json",
-      "webp"  => "image/webp",
-      "woff"  => "font/woff",
+      "webp" => "image/webp",
+      "woff" => "font/woff",
       "woff2" => "font/woff2",
-      "xbm"   => "image/x-xbitmap",
+      "xbm" => "image/x-xbitmap",
       "xhtml" => "text/html",
-      "xls"   => "application/vnd.ms-excel",
-      "xml"   => "text/xml",
-      "xpm"   => "image/x-xpixmap",
-      "xwd"   => "image/x-xwindowdump",
-      "zip"   => "application/zip",
+      "xls" => "application/vnd.ms-excel",
+      "xml" => "text/xml",
+      "xpm" => "image/x-xpixmap",
+      "xwd" => "image/x-xwindowdump",
+      "zip" => "application/zip"
     }
 
     ##
     # Loads Apache-compatible mime.types in +file+.
 
     def load_mime_types(file)
-      # note: +file+ may be a "| command" for now; some people may
+      # NOTE: +file+ may be a "| command" for now; some people may
       # rely on this, but currently we do not use this method by default.
-      File.open(file){ |io|
-        hash = Hash.new
-        io.each{ |line|
+      File.open(file) { |io|
+        hash = {}
+        io.each { |line|
           next if /^#/ =~ line
+
           line.chomp!
           mimetype, ext0 = line.split(/\s+/, 2)
           next unless ext0
           next if ext0.empty?
-          ext0.split(/\s+/).each{ |ext| hash[ext] = mimetype }
+
+          ext0.split(/\s+/).each { |ext| hash[ext] = mimetype }
         }
         hash
       }
@@ -142,8 +146,8 @@ module WEBrick
     # mime type was found application/octet-stream is returned.
 
     def mime_type(filename, mime_tab)
-      suffix1 = (/\.(\w+)$/ =~ filename && $1.downcase)
-      suffix2 = (/\.(\w+)\.[\w\-]+$/ =~ filename && $1.downcase)
+      suffix1 = /\.(\w+)$/ =~ filename && ::Regexp.last_match(1).downcase
+      suffix2 = /\.(\w+)\.[\w-]+$/ =~ filename && ::Regexp.last_match(1).downcase
       mime_tab[suffix1] || mime_tab[suffix2] || "application/octet-stream"
     end
     module_function :mime_type
@@ -155,10 +159,11 @@ module WEBrick
     def parse_header(raw)
       header = Hash.new([].freeze)
       field = nil
-      raw.each_line{|line|
+      raw.each_line { |line|
         case line
         when /^([A-Za-z0-9!\#$%&'*+\-.^_`|~]+):(.*?)\z/om
-          field, value = $1, $2.strip
+          field = ::Regexp.last_match(1)
+          value = ::Regexp.last_match(2).strip
           field.downcase!
           header[field] = [] unless header.has_key?(field)
           header[field] << value
@@ -167,12 +172,13 @@ module WEBrick
           unless field
             raise HTTPStatus::BadRequest, "bad header '#{line}'."
           end
+
           header[field][-1] << " " << value
         else
           raise HTTPStatus::BadRequest, "bad header '#{line}'."
         end
       }
-      header.each{|key, values|
+      header.each { |_key, values|
         values.each(&:strip!)
       }
       header
@@ -183,8 +189,8 @@ module WEBrick
     # Splits a header value +str+ according to HTTP specification.
 
     def split_header_value(str)
-      str.scan(%r'\G((?:"(?:\\.|[^"])+?"|[^",]++)+)
-                    (?:,\s*|\Z)'xn).flatten
+      str.scan(/\G((?:"(?:\\.|[^"])+?"|[^",]++)+)
+                    (?:,\s*|\Z)/xn).flatten
     end
     module_function :split_header_value
 
@@ -193,12 +199,12 @@ module WEBrick
 
     def parse_range_header(ranges_specifier)
       if /^bytes=(.*)/ =~ ranges_specifier
-        byte_range_set = split_header_value($1)
-        byte_range_set.collect{|range_spec|
+        byte_range_set = split_header_value(::Regexp.last_match(1))
+        byte_range_set.collect { |range_spec|
           case range_spec
-          when /^(\d+)-(\d+)/ then $1.to_i .. $2.to_i
-          when /^(\d+)-/      then $1.to_i .. -1
-          when /^-(\d+)/      then -($1.to_i) .. -1
+          when /^(\d+)-(\d+)/ then ::Regexp.last_match(1).to_i..::Regexp.last_match(2).to_i
+          when /^(\d+)-/      then ::Regexp.last_match(1).to_i..-1
+          when /^-(\d+)/      then -::Regexp.last_match(1).to_i..-1
           else return nil
           end
         }
@@ -213,17 +219,17 @@ module WEBrick
       tmp = []
       if value
         parts = value.split(/,\s*/)
-        parts.each {|part|
-          if m = %r{^([^\s,]+?)(?:;\s*q=(\d+(?:\.\d+)?))?$}.match(part)
-            val = m[1]
-            q = (m[2] or 1).to_f
-            tmp.push([val, q])
-          end
+        parts.each { |part|
+          next unless m = /^([^\s,]+?)(?:;\s*q=(\d+(?:\.\d+)?))?$/.match(part)
+
+          val = m[1]
+          q = (m[2] or 1).to_f
+          tmp.push([val, q])
         }
-        tmp = tmp.sort_by{|val, q| -q}
-        tmp.collect!{|val, q| val}
+        tmp = tmp.sort_by { |_val, q| -q }
+        tmp.collect! { |val, _q| val }
       end
-      return tmp
+      tmp
     end
     module_function :parse_qvalues
 
@@ -231,7 +237,7 @@ module WEBrick
     # Removes quotes and escapes from +str+
 
     def dequote(str)
-      ret = (/\A"(.*)"\Z/ =~ str) ? $1 : str.dup
+      ret = /\A"(.*)"\Z/ =~ str ? ::Regexp.last_match(1) : str.dup
       ret.gsub!(/\\(.)/, "\\1")
       ret
     end
@@ -241,7 +247,7 @@ module WEBrick
     # Quotes and escapes quotes in +str+
 
     def quote(str)
-      +'"' << str.gsub(/[\\\"]/o, "\\\1") << '"'
+      +'"' << str.gsub(/[\\"]/o, "\\\1") << '"'
     end
     module_function :quote
 
@@ -256,14 +262,10 @@ module WEBrick
       ##
       # The name of the form data part
 
-      attr_accessor :name
+      attr_accessor :name, :filename, :next_data
 
       ##
-      # The filename of the form data part
-
-      attr_accessor :filename
-
-      attr_accessor :next_data # :nodoc:
+      # The filename of the form data part # :nodoc:
       protected :next_data
 
       ##
@@ -294,11 +296,9 @@ module WEBrick
       # Retrieves the header at the first entry in +key+
 
       def [](*key)
-        begin
-          @header[key[0].downcase].join(", ")
-        rescue StandardError, NameError
-          super
-        end
+        @header[key[0].downcase].join(", ")
+      rescue StandardError, NameError
+        super
       end
 
       ##
@@ -311,10 +311,10 @@ module WEBrick
         if @header
           super
         elsif str == CRLF
-          @header = HTTPUtils::parse_header(@raw_header.join)
+          @header = HTTPUtils.parse_header(@raw_header.join)
           if cd = self['content-disposition']
-            if /\s+name="(.*?)"/ =~ cd then @name = $1 end
-            if /\s+filename="(.*?)"/ =~ cd then @filename = $1 end
+            if /\s+name="(.*?)"/ =~ cd then @name = ::Regexp.last_match(1) end
+            if /\s+filename="(.*?)"/ =~ cd then @filename = ::Regexp.last_match(1) end
           end
         else
           @raw_header << str
@@ -356,7 +356,7 @@ module WEBrick
 
       def list
         ret = []
-        each_data{|data|
+        each_data { |data|
           ret << data.to_s
         }
         ret
@@ -365,7 +365,7 @@ module WEBrick
       ##
       # A FormData will behave like an Array
 
-      alias :to_ary :list
+      alias to_ary list
 
       ##
       # This FormData's body
@@ -379,11 +379,12 @@ module WEBrick
     # Parses the query component of a URI in +str+
 
     def parse_query(str)
-      query = Hash.new
+      query = {}
       if str
-        str.split(/[&;]/).each{|x|
+        str.split(/[&;]/).each { |x|
           next if x.empty?
-          key, val = x.split(/=/,2)
+
+          key, val = x.split(/=/, 2)
           key = unescape_form(key)
           val = unescape_form(val.to_s)
           val = FormData.new(val)
@@ -404,10 +405,11 @@ module WEBrick
 
     def parse_form_data(io, boundary)
       boundary_regexp = /\A--#{Regexp.quote(boundary)}(--)?#{CRLF}\z/
-      form_data = Hash.new
+      form_data = {}
       return form_data unless io
+
       data = nil
-      io.each_line{|line|
+      io.each_line { |line|
         if boundary_regexp =~ line
           if data
             data.chop!
@@ -420,13 +422,11 @@ module WEBrick
           end
           data = FormData.new
           next
-        else
-          if data
-            data << line
-          end
+        elsif data
+          data << line
         end
       }
-      return form_data
+      form_data
     end
     module_function :parse_form_data
 
@@ -438,36 +438,38 @@ module WEBrick
     upalpha  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     mark     = '-_.!~*\'()'
     unreserved = num + lowalpha + upalpha + mark
-    control  = (0x0..0x1f).collect{|c| c.chr }.join + "\x7f"
+    control  = (0x0..0x1f).collect { |c| c.chr }.join + "\x7f"
     space    = " "
     delims   = '<>#%"'
     unwise   = '{}|\\^[]`'
-    nonascii = (0x80..0xff).collect{|c| c.chr }.join
+    nonascii = (0x80..0xff).collect { |c| c.chr }.join
 
     module_function
 
     # :stopdoc:
 
-    def _make_regex(str) /([#{Regexp.escape(str)}])/n end
-    def _make_regex!(str) /([^#{Regexp.escape(str)}])/n end
+    def _make_regex(str) = /([#{Regexp.escape(str)}])/n
+    def _make_regex!(str) = /([^#{Regexp.escape(str)}])/n
+
     def _escape(str, regex)
       str = str.b
-      str.gsub!(regex) {"%%%02X" % $1.ord}
+      str.gsub!(regex) { "%%%02X" % ::Regexp.last_match(1).ord }
       # %-escaped string should contain US-ASCII only
       str.force_encoding(Encoding::US_ASCII)
     end
+
     def _unescape(str, regex)
       str = str.b
-      str.gsub!(regex) {$1.hex.chr}
+      str.gsub!(regex) { ::Regexp.last_match(1).hex.chr }
       # encoding of %-unescaped string is unknown
       str
     end
 
-    UNESCAPED = _make_regex(control+space+delims+unwise+nonascii)
-    UNESCAPED_FORM = _make_regex(reserved+control+delims+unwise+nonascii)
+    UNESCAPED = _make_regex(control + space + delims + unwise + nonascii)
+    UNESCAPED_FORM = _make_regex(reserved + control + delims + unwise + nonascii)
     NONASCII  = _make_regex(nonascii)
     ESCAPED   = /%([0-9a-fA-F]{2})/
-    UNESCAPED_PCHAR = _make_regex!(unreserved+":@&=+$,")
+    UNESCAPED_PCHAR = _make_regex!(unreserved + ":@&=+$,")
 
     # :startdoc:
 
@@ -506,10 +508,10 @@ module WEBrick
 
     def escape_path(str)
       result = +""
-      str.scan(%r{/([^/]*)}).each{|i|
+      str.scan(%r{/([^/]*)}).each { |i|
         result << "/" << _escape(i[0], UNESCAPED_PCHAR)
       }
-      return result
+      result
     end
 
     ##

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpservlet.rb -- HTTPServlet Module
 #
@@ -74,14 +75,13 @@ module WEBrick
     #   server.mount '/configurable', Configurable, 'red', '2em'
 
     class AbstractServlet
-
       ##
       # Factory for servlet instances that will handle a request from +server+
       # using +options+ from the mount point.  By default a new servlet
       # instance is created for every call.
 
       def self.get_instance(server, *options)
-        self.new(server, *options)
+        new(server, *options)
       end
 
       ##
@@ -112,7 +112,7 @@ module WEBrick
       ##
       # Raises a NotFound exception
 
-      def do_GET(req, res)
+      def do_GET(_req, _res)
         raise HTTPStatus::NotFound, "not found."
       end
 
@@ -126,8 +126,8 @@ module WEBrick
       ##
       # Returns the allowed HTTP request methods
 
-      def do_OPTIONS(req, res)
-        m = self.methods.grep(/\Ado_([A-Z]+)\z/) {$1}
+      def do_OPTIONS(_req, res)
+        m = methods.grep(/\Ado_([A-Z]+)\z/) { ::Regexp.last_match(1) }
         m.sort!
         res["allow"] = m.join(",")
       end
@@ -138,7 +138,7 @@ module WEBrick
       # Redirects to a path ending in /
 
       def redirect_to_directory_uri(req, res)
-        if req.path[-1] != ?/
+        if req.path[-1] != '/'
           location = WEBrick::HTTPUtils.escape_path(req.path + "/")
           if req.query_string && req.query_string.bytesize > 0
             location << "?" << req.query_string
@@ -147,6 +147,5 @@ module WEBrick
         end
       end
     end
-
   end
 end

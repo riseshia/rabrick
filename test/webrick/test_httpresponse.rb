@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "webrick"
 require "stringio"
 require "net/http"
@@ -12,7 +13,7 @@ module WEBrick
         @messages = []
       end
 
-      def warn msg
+      def warn(msg)
         @messages << msg
       end
     end
@@ -117,41 +118,40 @@ module WEBrick
     end
 
     def test_304_does_not_log_warning
-      res.status      = 304
+      res.status = 304
       res.setup_header
       assert_equal 0, logger.messages.length
     end
 
     def test_204_does_not_log_warning
-      res.status      = 204
+      res.status = 204
       res.setup_header
 
       assert_equal 0, logger.messages.length
     end
 
     def test_1xx_does_not_log_warnings
-      res.status      = 105
+      res.status = 105
       res.setup_header
 
       assert_equal 0, logger.messages.length
     end
 
     def test_200_chunked_does_not_set_content_length
-      res.chunked     = false
+      res.chunked = false
       res["Transfer-Encoding"] = 'chunked'
       res.setup_header
       assert_nil res.header.fetch('content-length', nil)
     end
 
     def test_send_body_io
-      IO.pipe {|body_r, body_w|
+      IO.pipe { |body_r, body_w|
         body_w.write 'hello'
         body_w.close
 
         @res.body = body_r
 
-        IO.pipe {|r, w|
-
+        IO.pipe { |r, w|
           @res.send_body w
 
           w.close
@@ -165,7 +165,7 @@ module WEBrick
     def test_send_body_string
       @res.body = 'hello'
 
-      IO.pipe {|r, w|
+      IO.pipe { |r, w|
         @res.send_body w
 
         w.close
@@ -178,7 +178,7 @@ module WEBrick
     def test_send_body_string_io
       @res.body = StringIO.new 'hello'
 
-      IO.pipe {|r, w|
+      IO.pipe { |r, w|
         @res.send_body w
 
         w.close
@@ -191,14 +191,13 @@ module WEBrick
     def test_send_body_io_chunked
       @res.chunked = true
 
-      IO.pipe {|body_r, body_w|
-
+      IO.pipe { |body_r, body_w|
         body_w.write 'hello'
         body_w.close
 
         @res.body = body_r
 
-        IO.pipe {|r, w|
+        IO.pipe { |r, w|
           @res.send_body w
 
           w.close
@@ -215,7 +214,7 @@ module WEBrick
 
       @res.body = 'hello'
 
-      IO.pipe {|r, w|
+      IO.pipe { |r, w|
         @res.send_body w
 
         w.close
@@ -231,7 +230,7 @@ module WEBrick
 
       @res.body = StringIO.new 'hello'
 
-      IO.pipe {|r, w|
+      IO.pipe { |r, w|
         @res.send_body w
 
         w.close
@@ -243,7 +242,7 @@ module WEBrick
     end
 
     def test_send_body_proc
-      @res.body = Proc.new { |out| out.write('hello') }
+      @res.body = proc { |out| out.write('hello') }
       IO.pipe do |r, w|
         @res.send_body(w)
         w.close
@@ -254,7 +253,7 @@ module WEBrick
     end
 
     def test_send_body_proc_chunked
-      @res.body = Proc.new { |out| out.write('hello') }
+      @res.body = proc { |out| out.write('hello') }
       @res.chunked = true
       IO.pipe do |r, w|
         @res.send_body(w)
@@ -266,7 +265,10 @@ module WEBrick
     end
 
     def test_send_body_proc_upgrade
-      @res.body = Proc.new { |out| out.write('hello'); out.close }
+      @res.body = proc { |out|
+        out.write('hello')
+        out.close
+      }
       @res.upgrade!("text")
 
       IO.pipe do |r, w|
@@ -278,7 +280,7 @@ module WEBrick
     end
 
     def test_send_body_proc_stream
-      @res.body = Proc.new do |socket|
+      @res.body = proc do |socket|
         chunk = socket.read
         socket.write(chunk)
         socket.close

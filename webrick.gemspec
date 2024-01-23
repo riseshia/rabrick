@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 begin
   require_relative 'lib/webrick/version'
 rescue LoadError
@@ -12,8 +13,8 @@ Gem::Specification.new do |s|
   s.summary = "HTTP server toolkit"
   s.description = "WEBrick is an HTTP server toolkit that can be configured as an HTTPS server, a proxy server, and a virtual-host server."
 
-  s.require_path = %w{lib}
-  s.files =  [
+  s.require_path = %w[lib]
+  s.files = [
     "Gemfile",
     "LICENSE.txt",
     "README.md",
@@ -53,7 +54,7 @@ Gem::Specification.new do |s|
     "lib/webrick/ssl.rb",
     "lib/webrick/utils.rb",
     "lib/webrick/version.rb",
-    "webrick.gemspec",
+    "webrick.gemspec"
   ]
   s.required_ruby_version = ">= 3.2.0"
 
@@ -64,7 +65,7 @@ Gem::Specification.new do |s|
 
   if s.respond_to?(:metadata=)
     s.metadata = {
-      "bug_tracker_uri" => "https://github.com/riseshia/webrick/issues",
+      "bug_tracker_uri" => "https://github.com/riseshia/webrick/issues"
     }
   end
 end

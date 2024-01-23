@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # config.rb -- Default configurations.
 #
@@ -17,57 +18,55 @@ require_relative 'log'
 
 module WEBrick
   module Config
-    LIBDIR = File::dirname(__FILE__) # :nodoc:
+    LIBDIR = File.dirname(__FILE__) # :nodoc:
 
     # for GenericServer
     General = Hash.new { |hash, key|
       case key
       when :ServerName
         hash[key] = Utils.getservername
-      else
-        nil
       end
     }.update(
-      :BindAddress    => nil,   # "0.0.0.0" or "::" or nil
-      :Port           => nil,   # users MUST specify this!!
-      :MaxClients     => 100,   # maximum number of the concurrent connections
-      :ServerType     => nil,   # default: WEBrick::SimpleServer
-      :Logger         => nil,   # default: WEBrick::Log.new
+      :BindAddress => nil, # "0.0.0.0" or "::" or nil
+      :Port => nil, # users MUST specify this!!
+      :MaxClients => 100,   # maximum number of the concurrent connections
+      :ServerType => nil,   # default: WEBrick::SimpleServer
+      :Logger => nil, # default: WEBrick::Log.new
       :ServerSoftware => "WEBrick/#{WEBrick::VERSION} " +
                          "(Ruby/#{RUBY_VERSION}/#{RUBY_RELEASE_DATE})",
-      :TempDir        => ENV['TMPDIR']||ENV['TMP']||ENV['TEMP']||'/tmp',
-      :DoNotListen    => false,
+      :TempDir => ENV['TMPDIR'] || ENV['TMP'] || ENV['TEMP'] || '/tmp',
+      :DoNotListen => false,
       :DoNotReverseLookup => true,
-      :ShutdownSocketWithoutClose => false,
+      :ShutdownSocketWithoutClose => false
     )
 
     # for HTTPServer, HTTPRequest, HTTPResponse ...
     HTTP = General.dup.update(
-      :Port           => 80,
+      :Port => 80,
       :RequestTimeout => 30,
-      :HTTPVersion    => HTTPVersion.new("1.1"),
-      :AccessLog      => nil,
-      :MimeTypes      => HTTPUtils::DefaultMimeTypes,
-      :DirectoryIndex => ["index.html","index.htm","index.cgi","index.rhtml"],
-      :DocumentRoot   => nil,
+      :HTTPVersion => HTTPVersion.new("1.1"),
+      :AccessLog => nil,
+      :MimeTypes => HTTPUtils::DefaultMimeTypes,
+      :DirectoryIndex => ["index.html", "index.htm", "index.cgi", "index.rhtml"],
+      :DocumentRoot => nil,
       :DocumentRootOptions => { :FancyIndexing => true },
-      :ServerAlias    => nil,
-      :InputBufferSize  => 65536, # input buffer size in reading request body
-      :OutputBufferSize => 65536, # output buffer size in sending File or IO
+      :ServerAlias => nil,
+      :InputBufferSize => 65_536, # input buffer size in reading request body
+      :OutputBufferSize => 65_536, # output buffer size in sending File or IO
 
       # for HTTPProxyServer
-      :ProxyAuthProc  => nil,
+      :ProxyAuthProc => nil,
       :ProxyContentHandler => nil,
-      :ProxyVia       => true,
-      :ProxyTimeout   => true,
-      :ProxyURI       => nil,
+      :ProxyVia => true,
+      :ProxyTimeout => true,
+      :ProxyURI => nil,
 
       :CGIInterpreter => nil,
-      :CGIPathEnv     => nil,
+      :CGIPathEnv => nil,
 
       # workaround: if Request-URIs contain 8bit chars,
       # they should be escaped before calling of URI::parse().
-      :Escape8bitURI  => false
+      :Escape8bitURI => false
     )
 
     ##
@@ -89,10 +88,10 @@ module WEBrick
 
     FileHandler = {
       :NondisclosureName => [".ht*", "*~"],
-      :FancyIndexing     => false,
-      :HandlerTable      => {},
-      :UserDir           => nil,  # e.g. "public_html"
-      :AcceptableLanguages => []  # ["en", "ja", ... ]
+      :FancyIndexing => false,
+      :HandlerTable => {},
+      :UserDir => nil, # e.g. "public_html"
+      :AcceptableLanguages => [] # ["en", "ja", ... ]
     }
 
     ##
@@ -102,7 +101,7 @@ module WEBrick
     #                     automatically?
 
     BasicAuth = {
-      :AutoReloadUserDB     => true,
+      :AutoReloadUserDB => true
     }
 
     ##
@@ -127,18 +126,18 @@ module WEBrick
     # :OperaHack:: Hack which allows Opera to work.
 
     DigestAuth = {
-      :Algorithm            => 'MD5-sess', # or 'MD5'
-      :Domain               => nil,        # an array includes domain names.
-      :Qop                  => [ 'auth' ], # 'auth' or 'auth-int' or both.
-      :UseOpaque            => true,
-      :UseNextNonce         => false,
-      :CheckNc              => false,
+      :Algorithm => 'MD5-sess', # or 'MD5'
+      :Domain => nil, # an array includes domain names.
+      :Qop => ['auth'], # 'auth' or 'auth-int' or both.
+      :UseOpaque => true,
+      :UseNextNonce => false,
+      :CheckNc => false,
       :UseAuthenticationInfoHeader => true,
-      :AutoReloadUserDB     => true,
-      :NonceExpirePeriod    => 30*60,
-      :NonceExpireDelta     => 60,
+      :AutoReloadUserDB => true,
+      :NonceExpirePeriod => 30 * 60,
+      :NonceExpireDelta => 60,
       :InternetExplorerHack => true,
-      :OperaHack            => true,
+      :OperaHack => true
     }
   end
 end

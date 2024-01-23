@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #--
 # httpstatus.rb -- HTTPStatus Class
 #
@@ -12,14 +13,12 @@
 require_relative 'accesslog'
 
 module WEBrick
-
   ##
   # This module is used to manager HTTP status codes.
   #
   # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html for more
   # information.
   module HTTPStatus
-
     ##
     # Root of the HTTP status class hierarchy
     class Status < StandardError
@@ -28,10 +27,10 @@ module WEBrick
       end
 
       # Returns the HTTP status code
-      def code() self::class::code end
+      def code = self.class.code
 
       # Returns the HTTP status description
-      def reason_phrase() self::class::reason_phrase end
+      def reason_phrase = self.class.reason_phrase
 
       alias to_i code # :nodoc:
     end
@@ -103,7 +102,7 @@ module WEBrick
       504 => 'Gateway Timeout',
       505 => 'HTTP Version Not Supported',
       507 => 'Insufficient Storage',
-      511 => 'Network Authentication Required',
+      511 => 'Network Authentication Required'
     }
 
     # Maps a status code to the corresponding Status class
@@ -111,17 +110,17 @@ module WEBrick
 
     # Creates a status or error class for each status code and
     # populates the CodeToError map.
-    StatusMessage.each{|code, message|
+    StatusMessage.each { |code, message|
       message.freeze
-      var_name = message.gsub(/[ \-]/,'_').upcase
-      err_name = message.gsub(/[ \-]/,'')
+      var_name = message.gsub(/[ -]/, '_').upcase
+      err_name = message.gsub(/[ -]/, '')
 
       case code
-      when 100...200; parent = Info
-      when 200...300; parent = Success
-      when 300...400; parent = Redirect
-      when 400...500; parent = ClientError
-      when 500...600; parent = ServerError
+      when 100...200 then parent = Info
+      when 200...300 then parent = Success
+      when 300...400 then parent = Redirect
+      when 400...500 then parent = ClientError
+      when 500...600 then parent = ServerError
       end
 
       const_set("RC_#{var_name}", code)

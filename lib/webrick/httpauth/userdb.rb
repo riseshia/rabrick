@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #--
 # httpauth/userdb.rb -- UserDB mix-in module.
 #
@@ -10,13 +11,11 @@
 
 module WEBrick
   module HTTPAuth
-
     ##
     # User database mixin for HTTPAuth.  This mixin dispatches user record
     # access to the underlying auth_type for this database.
 
     module UserDB
-
       ##
       # The authentication type.
       #
@@ -30,14 +29,14 @@ module WEBrick
       # using the auth_type of this database.
 
       def make_passwd(realm, user, pass)
-        @auth_type::make_passwd(realm, user, pass)
+        @auth_type.make_passwd(realm, user, pass)
       end
 
       ##
       # Sets a password in +realm+ with +user+ and +password+ for the
       # auth_type of this database.
 
-      def set_passwd(realm, user, pass)
+      def set_passwd(_realm, user, pass)
         self[user] = pass
       end
 
@@ -45,7 +44,7 @@ module WEBrick
       # Retrieves a password in +realm+ for +user+ for the auth_type of this
       # database.  +reload_db+ is a dummy value.
 
-      def get_passwd(realm, user, reload_db=false)
+      def get_passwd(realm, user, _reload_db = false)
         make_passwd(realm, user, self[user])
       end
     end

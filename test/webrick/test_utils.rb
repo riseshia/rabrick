@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "test/unit"
 require "webrick/utils"
 
@@ -24,16 +25,21 @@ class TestWEBrickUtils < Test::Unit::TestCase
 
   def test_no_timeout
     m = WEBrick::Utils
-    assert_equal(:foo, m.timeout(10){ :foo })
+    assert_equal(:foo, m.timeout(10) { :foo })
     assert_expired(m)
   end
 
   def test_nested_timeout_outer
     m = WEBrick::Utils
     i = 0
-    assert_raise(Timeout::Error){
-      m.timeout(1){
-        assert_raise(Timeout::Error){ m.timeout(0.1){ i += 1; sleep(1) } }
+    assert_raise(Timeout::Error) {
+      m.timeout(1) {
+        assert_raise(Timeout::Error) {
+          m.timeout(0.1) {
+            i += 1
+            sleep(1)
+          }
+        }
         assert_not_expired(m)
         i += 1
         sleep(2)
@@ -45,14 +51,14 @@ class TestWEBrickUtils < Test::Unit::TestCase
 
   def test_timeout_default_exception
     m = WEBrick::Utils
-    assert_raise(Timeout::Error){ m.timeout(0.01){ sleep } }
+    assert_raise(Timeout::Error) { m.timeout(0.01) { sleep } }
     assert_expired(m)
   end
 
   def test_timeout_custom_exception
     m = WEBrick::Utils
     ex = EX
-    assert_raise(ex){ m.timeout(0.01, ex){ sleep } }
+    assert_raise(ex) { m.timeout(0.01, ex) { sleep } }
     assert_expired(m)
   end
 
@@ -60,9 +66,12 @@ class TestWEBrickUtils < Test::Unit::TestCase
     m = WEBrick::Utils
     ex = EX
     i = 0
-    assert_raise(ex){
-      m.timeout(10){
-        m.timeout(0.01, ex){ i += 1; sleep }
+    assert_raise(ex) {
+      m.timeout(10) {
+        m.timeout(0.01, ex) {
+          i += 1
+          sleep
+        }
       }
       sleep
     }
@@ -74,9 +83,12 @@ class TestWEBrickUtils < Test::Unit::TestCase
     m = WEBrick::Utils
     ex = EX
     i = 0
-    assert_raise(Timeout::Error){
-      m.timeout(0.01){
-        m.timeout(1.0, ex){ i += 1; sleep }
+    assert_raise(Timeout::Error) {
+      m.timeout(0.01) {
+        m.timeout(1.0, ex) {
+          i += 1
+          sleep
+        }
       }
       sleep
     }

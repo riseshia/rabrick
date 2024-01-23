@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # prochandler.rb -- ProcHandler Class
 #
@@ -13,7 +14,6 @@ require_relative 'abstract'
 
 module WEBrick
   module HTTPServlet
-
     ##
     # Mounts a proc at a path that accepts a request and response.
     #
@@ -27,7 +27,7 @@ module WEBrick
 
     class ProcHandler < AbstractServlet
       # :stopdoc:
-      def get_instance(server, *options)
+      def get_instance(_server, *_options)
         self
       end
 
@@ -43,6 +43,5 @@ module WEBrick
       alias do_PUT  do_GET
       # :startdoc:
     end
-
   end
 end

@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "webrick"
 begin
   require "webrick/https"
@@ -10,7 +11,7 @@ module TestWEBrick
   NullWriter = Object.new
   def NullWriter.<<(msg)
     puts msg if $DEBUG
-    return self
+    self
   end
 
   class WEBrick::HTTPServlet::CGIHandler
@@ -25,13 +26,13 @@ module TestWEBrick
 
   RubyBin = "\"#{EnvUtil.rubybin}\""
   RubyBin << " --disable-gems"
-  RubyBin << " \"-I#{File.expand_path("../..", File.dirname(__FILE__))}/lib\""
+  RubyBin << " \"-I#{File.expand_path('../..', File.dirname(__FILE__))}/lib\""
   RubyBin << " \"-I#{File.dirname(EnvUtil.rubybin)}/.ext/common\""
   RubyBin << " \"-I#{File.dirname(EnvUtil.rubybin)}/.ext/#{RUBY_PLATFORM}\""
 
   RubyBinArray = [EnvUtil.rubybin]
   RubyBinArray << "--disable-gems"
-  RubyBinArray << "-I" << "#{File.expand_path("../..", File.dirname(__FILE__))}/lib"
+  RubyBinArray << "-I" << "#{File.expand_path('../..', File.dirname(__FILE__))}/lib"
   RubyBinArray << "-I" << "#{File.dirname(EnvUtil.rubybin)}/.ext/common"
   RubyBinArray << "-I" << "#{File.dirname(EnvUtil.rubybin)}/.ext/#{RUBY_PLATFORM}"
 
@@ -43,19 +44,19 @@ module TestWEBrick
 
   module_function
 
-  DefaultLogTester = lambda {|log, access_log| assert_equal([], log) }
+  DefaultLogTester = ->(log, _access_log) { assert_equal([], log) }
 
-  def start_server(klass, config={}, log_tester=DefaultLogTester, &block)
+  def start_server(klass, config = {}, log_tester = DefaultLogTester, &block)
     log_ary = []
     access_log_ary = []
-    log = proc { "webrick log start:\n" + (log_ary+access_log_ary).join.gsub(/^/, "  ").chomp + "\nwebrick log end" }
-    config = ({
+    log = proc { "webrick log start:\n" + (log_ary + access_log_ary).join.gsub(/^/, "  ").chomp + "\nwebrick log end" }
+    config = {
       :BindAddress => "127.0.0.1", :Port => 0,
       :ServerType => Thread,
       :Logger => WEBrick::Log.new(log_ary, WEBrick::BasicLog::WARN),
       :AccessLog => [[access_log_ary, ""]]
-    }.update(config))
-    server = capture_output {break klass.new(config)}
+    }.update(config)
+    server = capture_output { break klass.new(config) }
     server_thread = server.start
     server_thread2 = Thread.new {
       server_thread.join
@@ -74,19 +75,19 @@ module TestWEBrick
     assert_join_threads([client_thread, server_thread2])
   end
 
-  def start_httpserver(config={}, log_tester=DefaultLogTester, &block)
+  def start_httpserver(config = {}, log_tester = DefaultLogTester, &block)
     start_server(WEBrick::HTTPServer, config, log_tester, &block)
   end
 
-  def start_httpproxy(config={}, log_tester=DefaultLogTester, &block)
+  def start_httpproxy(config = {}, log_tester = DefaultLogTester, &block)
     start_server(WEBrick::HTTPProxyServer, config, log_tester, &block)
   end
 
-  def start_cgi_server(config={}, log_tester=TestWEBrick::DefaultLogTester, &block)
+  def start_cgi_server(config = {}, log_tester = TestWEBrick::DefaultLogTester, &block)
     config = {
       :CGIInterpreter => TestWEBrick::RubyBin,
       :DocumentRoot => File.dirname(__FILE__),
-      :DirectoryIndex => ["webrick.cgi"],
+      :DirectoryIndex => ["webrick.cgi"]
     }.merge(config)
     if RUBY_PLATFORM =~ /mswin|mingw|cygwin|bccwin32/
       config[:CGIPathEnv] = ENV['PATH'] # runtime dll may not be in system dir.

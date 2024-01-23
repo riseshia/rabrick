@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # cookie.rb -- Cookie class
 #
@@ -13,12 +14,10 @@ require 'time'
 require_relative 'httputils'
 
 module WEBrick
-
   ##
   # Processes HTTP cookies
 
   class Cookie
-
     ##
     # The cookie name
 
@@ -27,12 +26,10 @@ module WEBrick
     ##
     # The cookie value
 
-    attr_accessor :value
+    attr_accessor :value, :version, :path, :secure, :comment, :max_age
 
     ##
     # The cookie version
-
-    attr_accessor :version
 
     ##
     # The cookie domain
@@ -41,24 +38,16 @@ module WEBrick
     ##
     # The cookie path
 
-    attr_accessor :path
-
     ##
     # Is this a secure cookie?
-
-    attr_accessor :secure
 
     ##
     # The cookie comment
 
-    attr_accessor :comment
-
     ##
     # The maximum age of the cookie
 
-    attr_accessor :max_age
-
-    #attr_accessor :comment_url, :discard, :port
+    # attr_accessor :comment_url, :discard, :port
 
     ##
     # Creates a new cookie with the given +name+ and +value+
@@ -66,10 +55,10 @@ module WEBrick
     def initialize(name, value)
       @name = name
       @value = value
-      @version = 0     # Netscape Cookie
+      @version = 0 # Netscape Cookie
 
       @domain = @path = @secure = @comment = @max_age =
-      @expires = @comment_url = @discard = @port = nil
+                                    @expires = @comment_url = @discard = @port = nil
     end
 
     ##
@@ -113,17 +102,17 @@ module WEBrick
         ret = []
         cookie = nil
         ver = 0
-        str.split(/;\s+/).each{|x|
-          key, val = x.split(/=/,2)
-          val = val ? HTTPUtils::dequote(val) : ""
+        str.split(/;\s+/).each { |x|
+          key, val = x.split(/=/, 2)
+          val = val ? HTTPUtils.dequote(val) : ""
           case key
-          when "$Version"; ver = val.to_i
-          when "$Path";    cookie.path = val
-          when "$Domain";  cookie.domain = val
-          when "$Port";    cookie.port = val
+          when "$Version" then ver = val.to_i
+          when "$Path" then    cookie.path = val
+          when "$Domain" then  cookie.domain = val
+          when "$Port" then    cookie.port = val
           else
             ret << cookie if cookie
-            cookie = self.new(key, val)
+            cookie = new(key, val)
             cookie.version = ver
           end
         }
@@ -141,7 +130,7 @@ module WEBrick
       first_elem.strip!
       key, value = first_elem.split(/=/, 2)
       cookie = new(key, HTTPUtils.dequote(value))
-      cookie_elem.each{|pair|
+      cookie_elem.each { |pair|
         pair.strip!
         key, value = pair.split(/=/, 2)
         if value
@@ -157,14 +146,14 @@ module WEBrick
         when "secure"  then cookie.secure = true
         end
       }
-      return cookie
+      cookie
     end
 
     ##
     # Parses the cookies in +str+
 
     def self.parse_set_cookies(str)
-      return str.split(/,(?=[^;,]*=)|,$/).collect{|c|
+      str.split(/,(?=[^;,]*=)|,$/).collect { |c|
         parse_set_cookie(c)
       }
     end

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #--
 # log.rb -- Log Class
 #
@@ -10,12 +11,10 @@
 # $IPR: log.rb,v 1.26 2002/10/06 17:06:10 gotoyuzo Exp $
 
 module WEBrick
-
   ##
   # A generic logging class
 
   class BasicLog
-
     # Fatal log level which indicates a server crash
 
     FATAL = 1
@@ -47,7 +46,7 @@ module WEBrick
     #
     # If no level is given INFO is chosen by default
 
-    def initialize(log_file=nil, level=nil)
+    def initialize(log_file = nil, level = nil)
       @level = level || INFO
       case log_file
       when String
@@ -57,7 +56,7 @@ module WEBrick
       when NilClass
         @log = $stderr
       else
-        @log = log_file  # requires "<<". (see BasicLog#log)
+        @log = log_file # requires "<<". (see BasicLog#log)
       end
     end
 
@@ -86,26 +85,26 @@ module WEBrick
     end
 
     # Shortcut for logging a FATAL message
-    def fatal(msg) log(FATAL, "FATAL " + format(msg)); end
+    def fatal(msg) = log(FATAL, "FATAL " + format(msg))
     # Shortcut for logging an ERROR message
-    def error(msg) log(ERROR, "ERROR " + format(msg)); end
+    def error(msg) = log(ERROR, "ERROR " + format(msg))
     # Shortcut for logging a WARN message
-    def warn(msg)  log(WARN,  "WARN  " + format(msg)); end
+    def warn(msg) = log(WARN, "WARN  " + format(msg))
     # Shortcut for logging an INFO message
-    def info(msg)  log(INFO,  "INFO  " + format(msg)); end
+    def info(msg) = log(INFO, "INFO  " + format(msg))
     # Shortcut for logging a DEBUG message
-    def debug(msg) log(DEBUG, "DEBUG " + format(msg)); end
+    def debug(msg) = log(DEBUG, "DEBUG " + format(msg))
 
     # Will the logger output FATAL messages?
-    def fatal?; @level >= FATAL; end
+    def fatal? = @level >= FATAL
     # Will the logger output ERROR messages?
-    def error?; @level >= ERROR; end
+    def error? = @level >= ERROR
     # Will the logger output WARN messages?
-    def warn?;  @level >= WARN; end
+    def warn? = @level >= WARN
     # Will the logger output INFO messages?
-    def info?;  @level >= INFO; end
+    def info? = @level >= INFO
     # Will the logger output DEBUG messages?
-    def debug?; @level >= DEBUG; end
+    def debug? = @level >= DEBUG
 
     private
 
@@ -119,7 +118,7 @@ module WEBrick
     def format(arg)
       if arg.is_a?(Exception)
         +"#{arg.class}: #{AccessLog.escape(arg.message)}\n\t" <<
-        arg.backtrace.join("\n\t") << "\n"
+          arg.backtrace.join("\n\t") << "\n"
       elsif arg.respond_to?(:to_str)
         AccessLog.escape(arg.to_str)
       else
@@ -140,7 +139,7 @@ module WEBrick
     # Same as BasicLog#initialize
     #
     # You can set the timestamp format through #time_format
-    def initialize(log_file=nil, level=nil)
+    def initialize(log_file = nil, level = nil)
       super(log_file, level)
       @time_format = "[%Y-%m-%d %H:%M:%S]"
     end

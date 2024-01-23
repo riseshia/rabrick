@@ -1,6 +1,7 @@
 # frozen_string_literal: false
+
 require "test/unit"
-require_relative "utils.rb"
+require_relative "utils"
 require "webrick"
 require "stringio"
 require "tmpdir"
@@ -33,7 +34,7 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
       Range: #{range_spec}
 
     END_OF_REQUEST
-    return StringIO.new(msg.gsub(/^ {6}/, ""))
+    StringIO.new(msg.gsub(/^ {6}/, ""))
   end
 
   def make_range_response(file, range_spec)
@@ -43,14 +44,14 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
     size = File.size(file)
     handler = default_file_handler(file)
     handler.make_partial_content(req, res, file, size)
-    return res
+    res
   end
 
   def test_make_partial_content
     filename = __FILE__
     filesize = File.size(filename)
 
-    res = make_range_response(filename, "bytes=#{filesize-100}-")
+    res = make_range_response(filename, "bytes=#{filesize - 100}-")
     assert_match(%r{^text/plain}, res["content-type"])
     assert_equal(100, get_res_body(res).size)
 
@@ -96,7 +97,7 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
   end
 
   def test_filehandler
-    config = { :DocumentRoot => File.dirname(__FILE__), }
+    config = { :DocumentRoot => File.dirname(__FILE__) }
     this_file = File.basename(__FILE__)
     filesize = File.size(__FILE__)
     this_data = File.binread(__FILE__)
@@ -104,111 +105,109 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
     bug2593 = '[ruby-dev:40030]'
 
     TestWEBrick.start_httpserver(config) do |server, addr, port, log|
-      begin
-        server[:DocumentRootOptions][:NondisclosureName] = []
-        http = Net::HTTP.new(addr, port)
-        req = Net::HTTP::Get.new("/")
-        http.request(req){|res|
-          assert_equal("200", res.code, log.call)
-          assert_equal("text/html", res.content_type, log.call)
-          assert_match(/HREF="#{this_file}"/, res.body, log.call)
-        }
-        req = Net::HTTP::Get.new("/#{this_file}")
-        http.request(req){|res|
-          assert_equal("200", res.code, log.call)
-          assert_equal("text/plain", res.content_type, log.call)
-          assert_equal(this_data, res.body, log.call)
-        }
+      server[:DocumentRootOptions][:NondisclosureName] = []
+      http = Net::HTTP.new(addr, port)
+      req = Net::HTTP::Get.new("/")
+      http.request(req) { |res|
+        assert_equal("200", res.code, log.call)
+        assert_equal("text/html", res.content_type, log.call)
+        assert_match(/HREF="#{this_file}"/, res.body, log.call)
+      }
+      req = Net::HTTP::Get.new("/#{this_file}")
+      http.request(req) { |res|
+        assert_equal("200", res.code, log.call)
+        assert_equal("text/plain", res.content_type, log.call)
+        assert_equal(this_data, res.body, log.call)
+      }
 
-        req = Net::HTTP::Get.new("/#{this_file}", "range"=>"bytes=#{filesize-100}-")
-        http.request(req){|res|
-          assert_equal("206", res.code, log.call)
-          assert_equal("text/plain", res.content_type, log.call)
-          assert_nothing_raised(bug2593) {range = res.content_range}
-          assert_equal((filesize-100)..(filesize-1), range, log.call)
-          assert_equal(this_data[-100..-1], res.body, log.call)
-        }
+      req = Net::HTTP::Get.new("/#{this_file}", "range" => "bytes=#{filesize - 100}-")
+      http.request(req) { |res|
+        assert_equal("206", res.code, log.call)
+        assert_equal("text/plain", res.content_type, log.call)
+        assert_nothing_raised(bug2593) { range = res.content_range }
+        assert_equal((filesize - 100)..(filesize - 1), range, log.call)
+        assert_equal(this_data[-100..-1], res.body, log.call)
+      }
 
-        req = Net::HTTP::Get.new("/#{this_file}", "range"=>"bytes=-100")
-        http.request(req){|res|
-          assert_equal("206", res.code, log.call)
-          assert_equal("text/plain", res.content_type, log.call)
-          assert_nothing_raised(bug2593) {range = res.content_range}
-          assert_equal((filesize-100)..(filesize-1), range, log.call)
-          assert_equal(this_data[-100..-1], res.body, log.call)
-        }
+      req = Net::HTTP::Get.new("/#{this_file}", "range" => "bytes=-100")
+      http.request(req) { |res|
+        assert_equal("206", res.code, log.call)
+        assert_equal("text/plain", res.content_type, log.call)
+        assert_nothing_raised(bug2593) { range = res.content_range }
+        assert_equal((filesize - 100)..(filesize - 1), range, log.call)
+        assert_equal(this_data[-100..-1], res.body, log.call)
+      }
 
-        req = Net::HTTP::Get.new("/#{this_file}", "range"=>"bytes=0-99")
-        http.request(req){|res|
-          assert_equal("206", res.code, log.call)
-          assert_equal("text/plain", res.content_type, log.call)
-          assert_nothing_raised(bug2593) {range = res.content_range}
-          assert_equal(0..99, range, log.call)
-          assert_equal(this_data[0..99], res.body, log.call)
-        }
+      req = Net::HTTP::Get.new("/#{this_file}", "range" => "bytes=0-99")
+      http.request(req) { |res|
+        assert_equal("206", res.code, log.call)
+        assert_equal("text/plain", res.content_type, log.call)
+        assert_nothing_raised(bug2593) { range = res.content_range }
+        assert_equal(0..99, range, log.call)
+        assert_equal(this_data[0..99], res.body, log.call)
+      }
 
-        req = Net::HTTP::Get.new("/#{this_file}", "range"=>"bytes=100-199")
-        http.request(req){|res|
-          assert_equal("206", res.code, log.call)
-          assert_equal("text/plain", res.content_type, log.call)
-          assert_nothing_raised(bug2593) {range = res.content_range}
-          assert_equal(100..199, range, log.call)
-          assert_equal(this_data[100..199], res.body, log.call)
-        }
+      req = Net::HTTP::Get.new("/#{this_file}", "range" => "bytes=100-199")
+      http.request(req) { |res|
+        assert_equal("206", res.code, log.call)
+        assert_equal("text/plain", res.content_type, log.call)
+        assert_nothing_raised(bug2593) { range = res.content_range }
+        assert_equal(100..199, range, log.call)
+        assert_equal(this_data[100..199], res.body, log.call)
+      }
 
-        req = Net::HTTP::Get.new("/#{this_file}", "range"=>"bytes=0-0")
-        http.request(req){|res|
-          assert_equal("206", res.code, log.call)
-          assert_equal("text/plain", res.content_type, log.call)
-          assert_nothing_raised(bug2593) {range = res.content_range}
-          assert_equal(0..0, range, log.call)
-          assert_equal(this_data[0..0], res.body, log.call)
-        }
+      req = Net::HTTP::Get.new("/#{this_file}", "range" => "bytes=0-0")
+      http.request(req) { |res|
+        assert_equal("206", res.code, log.call)
+        assert_equal("text/plain", res.content_type, log.call)
+        assert_nothing_raised(bug2593) { range = res.content_range }
+        assert_equal(0..0, range, log.call)
+        assert_equal(this_data[0..0], res.body, log.call)
+      }
 
-        req = Net::HTTP::Get.new("/#{this_file}", "range"=>"bytes=-1")
-        http.request(req){|res|
-          assert_equal("206", res.code, log.call)
-          assert_equal("text/plain", res.content_type, log.call)
-          assert_nothing_raised(bug2593) {range = res.content_range}
-          assert_equal((filesize-1)..(filesize-1), range, log.call)
-          assert_equal(this_data[-1, 1], res.body, log.call)
-        }
+      req = Net::HTTP::Get.new("/#{this_file}", "range" => "bytes=-1")
+      http.request(req) { |res|
+        assert_equal("206", res.code, log.call)
+        assert_equal("text/plain", res.content_type, log.call)
+        assert_nothing_raised(bug2593) { range = res.content_range }
+        assert_equal((filesize - 1)..(filesize - 1), range, log.call)
+        assert_equal(this_data[-1, 1], res.body, log.call)
+      }
 
-        req = Net::HTTP::Get.new("/#{this_file}", "range"=>"bytes=0-0, -2")
-        http.request(req){|res|
-          assert_equal("206", res.code, log.call)
-          assert_equal("multipart/byteranges", res.content_type, log.call)
-        }
-      ensure
-        server[:DocumentRootOptions].delete :NondisclosureName
-      end
+      req = Net::HTTP::Get.new("/#{this_file}", "range" => "bytes=0-0, -2")
+      http.request(req) { |res|
+        assert_equal("206", res.code, log.call)
+        assert_equal("multipart/byteranges", res.content_type, log.call)
+      }
+    ensure
+      server[:DocumentRootOptions].delete :NondisclosureName
     end
   end
 
   def test_non_disclosure_name
-    config = { :DocumentRoot => File.dirname(__FILE__), }
-    log_tester = lambda {|log, access_log|
-      log = log.reject {|s| /ERROR `.*\' not found\./ =~ s }
-      log = log.reject {|s| /WARN  the request refers nondisclosure name/ =~ s }
+    config = { :DocumentRoot => File.dirname(__FILE__) }
+    log_tester = lambda { |log, _access_log|
+      log = log.reject { |s| /ERROR `.*' not found\./ =~ s }
+      log = log.reject { |s| /WARN  the request refers nondisclosure name/ =~ s }
       assert_equal([], log)
     }
     this_file = File.basename(__FILE__)
     TestWEBrick.start_httpserver(config, log_tester) do |server, addr, port, log|
       http = Net::HTTP.new(addr, port)
       doc_root_opts = server[:DocumentRootOptions]
-      doc_root_opts[:NondisclosureName] = %w(.ht* *~ test_*)
+      doc_root_opts[:NondisclosureName] = %w[.ht* *~ test_*]
       req = Net::HTTP::Get.new("/")
-      http.request(req){|res|
+      http.request(req) { |res|
         assert_equal("200", res.code, log.call)
         assert_equal("text/html", res.content_type, log.call)
         assert_no_match(/HREF="#{File.basename(__FILE__)}"/, res.body)
       }
       req = Net::HTTP::Get.new("/#{this_file}")
-      http.request(req){|res|
+      http.request(req) { |res|
         assert_equal("404", res.code, log.call)
       }
-      doc_root_opts[:NondisclosureName] = %w(.ht* *~ TEST_*)
-      http.request(req){|res|
+      doc_root_opts[:NondisclosureName] = %w[.ht* *~ TEST_*]
+      http.request(req) { |res|
         assert_equal("404", res.code, log.call)
       }
     end
@@ -217,30 +216,30 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
   def test_directory_traversal
     return if File.executable?(__FILE__) # skip on strange file system
 
-    config = { :DocumentRoot => File.dirname(__FILE__), }
-    log_tester = lambda {|log, access_log|
-      log = log.reject {|s| /ERROR bad URI/ =~ s }
-      log = log.reject {|s| /ERROR `.*\' not found\./ =~ s }
+    config = { :DocumentRoot => File.dirname(__FILE__) }
+    log_tester = lambda { |log, _access_log|
+      log = log.reject { |s| /ERROR bad URI/ =~ s }
+      log = log.reject { |s| /ERROR `.*' not found\./ =~ s }
       assert_equal([], log)
     }
-    TestWEBrick.start_httpserver(config, log_tester) do |server, addr, port, log|
+    TestWEBrick.start_httpserver(config, log_tester) do |_server, addr, port, log|
       http = Net::HTTP.new(addr, port)
       req = Net::HTTP::Get.new("/../../")
-      http.request(req){|res| assert_equal("400", res.code, log.call) }
+      http.request(req) { |res| assert_equal("400", res.code, log.call) }
       req = Net::HTTP::Get.new("/..%5c../#{File.basename(__FILE__)}")
-      http.request(req){|res| assert_equal(windows? ? "200" : "404", res.code, log.call) }
+      http.request(req) { |res| assert_equal(windows? ? "200" : "404", res.code, log.call) }
       req = Net::HTTP::Get.new("/..%5c..%5cruby.c")
-      http.request(req){|res| assert_equal("404", res.code, log.call) }
+      http.request(req) { |res| assert_equal("404", res.code, log.call) }
     end
   end
 
   def test_unwise_in_path
     if windows?
-      config = { :DocumentRoot => File.dirname(__FILE__), }
-      TestWEBrick.start_httpserver(config) do |server, addr, port, log|
+      config = { :DocumentRoot => File.dirname(__FILE__) }
+      TestWEBrick.start_httpserver(config) do |_server, addr, port, log|
         http = Net::HTTP.new(addr, port)
         req = Net::HTTP::Get.new("/..%5c..")
-        http.request(req){|res| assert_equal("301", res.code, log.call) }
+        http.request(req) { |res| assert_equal("301", res.code, log.call) }
       end
     end
   end
@@ -248,12 +247,12 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
   def test_short_filename
     return if File.executable?(__FILE__) # skip on strange file system
 
-    log_tester = lambda {|log, access_log|
-      log = log.reject {|s| /ERROR `.*\' not found\./ =~ s }
-      log = log.reject {|s| /WARN  the request refers nondisclosure name/ =~ s }
+    log_tester = lambda { |log, _access_log|
+      log = log.reject { |s| /ERROR `.*' not found\./ =~ s }
+      log = log.reject { |s| /WARN  the request refers nondisclosure name/ =~ s }
       assert_equal([], log)
     }
-    TestWEBrick.start_cgi_server({}, log_tester) do |server, addr, port, log|
+    TestWEBrick.start_cgi_server({}, log_tester) do |_server, addr, port, log|
       http = Net::HTTP.new(addr, port)
       if windows?
         root = File.dirname(__FILE__).tr("/", "\\")
@@ -277,11 +276,11 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
       end
 
       req = Net::HTTP::Get.new("/.htaccess")
-      http.request(req) {|res| assert_equal("404", res.code, log.call) }
+      http.request(req) { |res| assert_equal("404", res.code, log.call) }
       req = Net::HTTP::Get.new("/htacce~1")
-      http.request(req) {|res| assert_equal("404", res.code, log.call) }
+      http.request(req) { |res| assert_equal("404", res.code, log.call) }
       req = Net::HTTP::Get.new("/HTACCE~1")
-      http.request(req) {|res| assert_equal("404", res.code, log.call) }
+      http.request(req) { |res| assert_equal("404", res.code, log.call) }
     end
   end
 
@@ -306,18 +305,18 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
       File.write("#{dir}/#{c}/#{basename}", "nested")
       config = {
         :DocumentRoot => dir,
-        :DirectoryIndex => [basename],
+        :DirectoryIndex => [basename]
       }
-      TestWEBrick.start_httpserver(config) do |server, addr, port, log|
+      TestWEBrick.start_httpserver(config) do |_server, addr, port, log|
         http = Net::HTTP.new(addr, port)
         path = "/#{basename}"
-        req = Net::HTTP::Get.new(WEBrick::HTTPUtils::escape(path))
-        http.request(req){|res| assert_equal("200", res.code, log.call + "\nFilesystem encoding is #{Encoding.find('filesystem')}") }
+        req = Net::HTTP::Get.new(WEBrick::HTTPUtils.escape(path))
+        http.request(req) { |res| assert_equal("200", res.code, log.call + "\nFilesystem encoding is #{Encoding.find('filesystem')}") }
         path = "/#{c}/#{basename}"
-        req = Net::HTTP::Get.new(WEBrick::HTTPUtils::escape(path))
-        http.request(req){|res| assert_equal("200", res.code, log.call) }
+        req = Net::HTTP::Get.new(WEBrick::HTTPUtils.escape(path))
+        http.request(req) { |res| assert_equal("200", res.code, log.call) }
         req = Net::HTTP::Get.new('/')
-        http.request(req){|res|
+        http.request(req) { |res|
           assert_equal("test_multibyte_char_in_path", res.body, log.call)
         }
       end
@@ -331,11 +330,11 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
 
   def test_erbhandler
     config = { :DocumentRoot => File.dirname(__FILE__) }
-    log_tester = lambda {|log, access_log|
-      log = log.reject {|s| /ERROR `.*\' not found\./ =~ s }
+    log_tester = lambda { |log, _access_log|
+      log = log.reject { |s| /ERROR `.*' not found\./ =~ s }
       assert_equal([], log)
     }
-    TestWEBrick.start_httpserver(config, log_tester) do |server, addr, port, log|
+    TestWEBrick.start_httpserver(config, log_tester) do |_server, addr, port, log|
       http = Net::HTTP.new(addr, port)
       req = Net::HTTP::Get.new("/webrick.rhtml")
       http.request(req) do |res|

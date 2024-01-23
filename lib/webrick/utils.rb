@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # utils.rb -- Miscellaneous utilities
 #
@@ -33,9 +34,9 @@ module WEBrick
     # Changes the process's uid and gid to the ones of +user+
     def su(user)
       if pw = Etc.getpwnam(user)
-        Process::initgroups(user, pw.gid)
-        Process::Sys::setgid(pw.gid)
-        Process::Sys::setuid(pw.uid)
+        Process.initgroups(user, pw.gid)
+        Process::Sys.setgid(pw.gid)
+        Process::Sys.setuid(pw.uid)
       else
         warn("WEBrick::Utils::su doesn't work on this platform", uplevel: 1)
       end
@@ -45,7 +46,7 @@ module WEBrick
     ##
     # The server hostname
     def getservername
-      Socket::gethostname
+      Socket.gethostname
     end
     module_function :getservername
 
@@ -57,14 +58,14 @@ module WEBrick
       unless port
         raise ArgumentError, "must specify port"
       end
+
       sockets = Socket.tcp_server_sockets(address, port)
-      sockets = sockets.map {|s|
+      sockets.map { |s|
         s.autoclose = false
         ts = TCPServer.for_fd(s.fileno)
         s.close
         ts
       }
-      return sockets
     end
     module_function :create_listeners
 
@@ -79,7 +80,7 @@ module WEBrick
     def random_string(len)
       rand_max = RAND_CHARS.bytesize
       ret = +""
-      len.times{ ret << RAND_CHARS[rand(rand_max)] }
+      len.times { ret << RAND_CHARS[rand(rand_max)] }
       ret
     end
     module_function :random_string
@@ -127,14 +128,14 @@ module WEBrick
       #
       # +time+:: Timeout in seconds
       # +exception+:: Exception to raise when timeout elapsed
-      def TimeoutHandler.register(seconds, exception)
+      def self.register(seconds, exception)
         at = Process.clock_gettime(Process::CLOCK_MONOTONIC) + seconds
         instance.register(Thread.current, at, exception)
       end
 
       ##
       # Cancels the timeout handler +id+
-      def TimeoutHandler.cancel(id)
+      def self.cancel(id)
         instance.cancel(Thread.current, id)
       end
 
@@ -146,8 +147,8 @@ module WEBrick
       # Creates a new TimeoutHandler.  You should use ::register and ::cancel
       # instead of creating the timeout handler directly.
       def initialize
-        TimeoutMutex.synchronize{
-          @timeout_info = Hash.new
+        TimeoutMutex.synchronize {
+          @timeout_info = {}
         }
         @queue = Thread::Queue.new
         @watcher = nil
@@ -156,47 +157,48 @@ module WEBrick
       # :nodoc:
       private \
         def watch
-          to_interrupt = []
-          while true
-            now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-            wakeup = nil
-            to_interrupt.clear
-            TimeoutMutex.synchronize{
-              @timeout_info.each {|thread, ary|
-                next unless ary
-                ary.each{|info|
-                  time, exception = *info
-                  if time < now
-                    to_interrupt.push [thread, info.object_id, exception]
-                  elsif !wakeup || time < wakeup
-                    wakeup = time
-                  end
-                }
+        to_interrupt = []
+        while true
+          now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          wakeup = nil
+          to_interrupt.clear
+          TimeoutMutex.synchronize {
+            @timeout_info.each { |thread, ary|
+              next unless ary
+
+              ary.each { |info|
+                time, exception = *info
+                if time < now
+                  to_interrupt.push [thread, info.object_id, exception]
+                elsif !wakeup || time < wakeup
+                  wakeup = time
+                end
               }
             }
-            to_interrupt.each {|arg| interrupt(*arg)}
-            if !wakeup
-              @queue.pop
-            elsif (wakeup -= now) > 0
-              begin
-                (th = Thread.start {@queue.pop}).join(wakeup)
-              ensure
-                th&.kill&.join
-              end
+          }
+          to_interrupt.each { |arg| interrupt(*arg) }
+          if !wakeup
+            @queue.pop
+          elsif (wakeup -= now) > 0
+            begin
+              (th = Thread.start { @queue.pop }).join(wakeup)
+            ensure
+              th&.kill&.join
             end
-            @queue.clear
           end
+          @queue.clear
         end
+      end
 
       # :nodoc:
       private \
         def watcher
-          (w = @watcher)&.alive? and return w # usual case
-          TimeoutMutex.synchronize{
-            (w = @watcher)&.alive? and next w # pathological check
-            @watcher = Thread.start(&method(:watch))
-          }
-        end
+        (w = @watcher)&.alive? and return w # usual case
+        TimeoutMutex.synchronize {
+          (w = @watcher)&.alive? and next w # pathological check
+          @watcher = Thread.start(&method(:watch))
+        }
+      end
 
       ##
       # Interrupts the timeout handler +id+ and raises +exception+
@@ -213,20 +215,20 @@ module WEBrick
       # +exception+:: Exception to raise when timeout elapsed
       def register(thread, time, exception)
         info = nil
-        TimeoutMutex.synchronize{
+        TimeoutMutex.synchronize {
           (@timeout_info[thread] ||= []) << (info = [time, exception])
         }
         @queue.push nil
         watcher
-        return info.object_id
+        info.object_id
       end
 
       ##
       # Cancels the timeout handler +id+
       def cancel(thread, id)
-        TimeoutMutex.synchronize{
+        TimeoutMutex.synchronize {
           if ary = @timeout_info[thread]
-            ary.delete_if{|info| info.object_id == id }
+            ary.delete_if { |info| info.object_id == id }
             if ary.empty?
               @timeout_info.delete(thread)
             end
@@ -238,7 +240,7 @@ module WEBrick
 
       ##
       def terminate
-        TimeoutMutex.synchronize{
+        TimeoutMutex.synchronize {
           @timeout_info.clear
           @watcher&.kill&.join
         }
@@ -250,8 +252,9 @@ module WEBrick
     # than +seconds+.
     #
     # If +seconds+ is zero or nil, simply executes the block
-    def timeout(seconds, exception=Timeout::Error)
+    def timeout(seconds, exception = Timeout::Error)
       return yield if seconds.nil? or seconds.zero?
+
       # raise ThreadError, "timeout within critical session" if Thread.critical
       id = TimeoutHandler.register(seconds, exception)
       begin

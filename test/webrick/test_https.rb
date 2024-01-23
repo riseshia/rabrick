@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "test/unit"
 require "net/http"
 require "webrick"
@@ -45,14 +46,15 @@ class TestWEBrickHTTPS < Test::Unit::TestCase
     config = {
       :ServerName => "localhost",
       :SSLEnable => true,
-      :SSLCertName => "/CN=localhost",
+      :SSLCertName => "/CN=localhost"
     }
-    TestWEBrick.start_httpserver(config){|server, addr, port, log|
-      server.mount_proc("/") {|req, res| res.body = "master" }
+    TestWEBrick.start_httpserver(config) { |server, addr, port, _log|
+      server.mount_proc("/") { |_req, res| res.body = "master" }
 
       # catch stderr in create_self_signed_cert
       stderr_buffer = StringIO.new
-      old_stderr, $stderr = $stderr, stderr_buffer
+      old_stderr = $stderr
+      $stderr = stderr_buffer
 
       begin
         vhost_config1 = {
@@ -62,10 +64,10 @@ class TestWEBrickHTTPS < Test::Unit::TestCase
           :Logger => NoLog,
           :AccessLog => [],
           :SSLEnable => true,
-          :SSLCertName => "/CN=vhost1",
+          :SSLCertName => "/CN=vhost1"
         }
         vhost1 = WEBrick::HTTPServer.new(vhost_config1)
-        vhost1.mount_proc("/") {|req, res| res.body = "vhost1" }
+        vhost1.mount_proc("/") { |_req, res| res.body = "vhost1" }
         server.virtual_host(vhost1)
 
         vhost_config2 = {
@@ -76,10 +78,10 @@ class TestWEBrickHTTPS < Test::Unit::TestCase
           :Logger => NoLog,
           :AccessLog => [],
           :SSLEnable => true,
-          :SSLCertName => "/CN=vhost2",
+          :SSLCertName => "/CN=vhost2"
         }
         vhost2 = WEBrick::HTTPServer.new(vhost_config2)
-        vhost2.mount_proc("/") {|req, res| res.body = "vhost2" }
+        vhost2.mount_proc("/") { |_req, res| res.body = "vhost2" }
         server.virtual_host(vhost2)
       ensure
         # restore stderr
@@ -99,11 +101,11 @@ class TestWEBrickHTTPS < Test::Unit::TestCase
     config = {
       :ServerName => "localhost",
       :SSLEnable => true,
-      :SSLCertName => "/CN=localhost",
+      :SSLCertName => "/CN=localhost"
     }
-    TestWEBrick.start_httpserver(config){|server, addr, port, log|
+    TestWEBrick.start_httpserver(config) { |server, _addr, _port, _log|
       assert_raise ArgumentError do
-        vhost = WEBrick::HTTPServer.new({:DoNotListen => true, :Logger => NoLog})
+        vhost = WEBrick::HTTPServer.new({ :DoNotListen => true, :Logger => NoLog })
         server.virtual_host(vhost)
       end
     }

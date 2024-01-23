@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "test/unit"
 require "webrick/httputils"
 
@@ -31,28 +32,28 @@ class TestWEBrickHTTPUtils < Test::Unit::TestCase
     assert_equal("/foo/bar/",  normalize_path("//foo///.//bar/.///.//"))
     assert_equal("/",          normalize_path("//foo///..///bar/.///..//.//"))
 
-    assert_raise(RuntimeError){ normalize_path("foo/bar") }
-    assert_raise(RuntimeError){ normalize_path("..") }
-    assert_raise(RuntimeError){ normalize_path("/..") }
-    assert_raise(RuntimeError){ normalize_path("/./..") }
-    assert_raise(RuntimeError){ normalize_path("/./../") }
-    assert_raise(RuntimeError){ normalize_path("/./../..") }
-    assert_raise(RuntimeError){ normalize_path("/./../../") }
-    assert_raise(RuntimeError){ normalize_path("/./../") }
-    assert_raise(RuntimeError){ normalize_path("/../..") }
-    assert_raise(RuntimeError){ normalize_path("/../../") }
-    assert_raise(RuntimeError){ normalize_path("/../../..") }
-    assert_raise(RuntimeError){ normalize_path("/../../../") }
-    assert_raise(RuntimeError){ normalize_path("/../foo/../") }
-    assert_raise(RuntimeError){ normalize_path("/../foo/../../") }
-    assert_raise(RuntimeError){ normalize_path("/foo/bar/../../../../") }
-    assert_raise(RuntimeError){ normalize_path("/foo/../bar/../../") }
-    assert_raise(RuntimeError){ normalize_path("/./../bar/") }
-    assert_raise(RuntimeError){ normalize_path("/./../") }
+    assert_raise(RuntimeError) { normalize_path("foo/bar") }
+    assert_raise(RuntimeError) { normalize_path("..") }
+    assert_raise(RuntimeError) { normalize_path("/..") }
+    assert_raise(RuntimeError) { normalize_path("/./..") }
+    assert_raise(RuntimeError) { normalize_path("/./../") }
+    assert_raise(RuntimeError) { normalize_path("/./../..") }
+    assert_raise(RuntimeError) { normalize_path("/./../../") }
+    assert_raise(RuntimeError) { normalize_path("/./../") }
+    assert_raise(RuntimeError) { normalize_path("/../..") }
+    assert_raise(RuntimeError) { normalize_path("/../../") }
+    assert_raise(RuntimeError) { normalize_path("/../../..") }
+    assert_raise(RuntimeError) { normalize_path("/../../../") }
+    assert_raise(RuntimeError) { normalize_path("/../foo/../") }
+    assert_raise(RuntimeError) { normalize_path("/../foo/../../") }
+    assert_raise(RuntimeError) { normalize_path("/foo/bar/../../../../") }
+    assert_raise(RuntimeError) { normalize_path("/foo/../bar/../../") }
+    assert_raise(RuntimeError) { normalize_path("/./../bar/") }
+    assert_raise(RuntimeError) { normalize_path("/./../") }
   end
 
   def test_split_header_value
-    assert_equal(['foo', 'bar'], split_header_value('foo, bar'))
+    assert_equal(%w[foo bar], split_header_value('foo, bar'))
     assert_equal(['"foo"', 'bar'], split_header_value('"foo", bar'))
     assert_equal(['foo', '"bar"'], split_header_value('foo, "bar"'))
     assert_equal(['*'], split_header_value('*'))

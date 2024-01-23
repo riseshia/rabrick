@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # https.rb -- SSL/TLS enhancement for HTTPServer
 #
@@ -22,43 +23,39 @@ module WEBrick
   # Adds SSL functionality to WEBrick::HTTPRequest
 
   class HTTPRequest
-
     ##
     # HTTP request SSL cipher
 
-    attr_reader :cipher
+    attr_reader :cipher, :server_cert, :client_cert
 
     ##
     # HTTP request server certificate
 
-    attr_reader :server_cert
-
     ##
     # HTTP request client certificate
-
-    attr_reader :client_cert
 
     # :stopdoc:
 
     alias orig_parse parse
 
-    def parse(socket=nil)
+    def parse(socket = nil)
       if socket.respond_to?(:cert)
         @server_cert = socket.cert || @config[:SSLCertificate]
         @client_cert = socket.peer_cert
         @client_cert_chain = socket.peer_cert_chain
-        @cipher      = socket.cipher
+        @cipher = socket.cipher
       end
       orig_parse(socket)
     end
 
     alias orig_parse_uri parse_uri
 
-    def parse_uri(str, scheme="https")
+    def parse_uri(str, scheme = "https")
       if server_cert
         return orig_parse_uri(str, scheme)
       end
-      return orig_parse_uri(str)
+
+      orig_parse_uri(str)
     end
     private :parse_uri
 
@@ -71,7 +68,7 @@ module WEBrick
         meta["SSL_SERVER_CERT"] = @server_cert.to_pem
         meta["SSL_CLIENT_CERT"] = @client_cert ? @client_cert.to_pem : ""
         if @client_cert_chain
-          @client_cert_chain.each_with_index{|cert, i|
+          @client_cert_chain.each_with_index { |cert, i|
             meta["SSL_CLIENT_CERT_CHAIN_#{i}"] = cert.to_pem
           }
         end
@@ -91,21 +88,16 @@ module WEBrick
   # Fake WEBrick::HTTPRequest for lookup_server
 
   class SNIRequest
-
     ##
     # The SNI hostname
 
-    attr_reader :host
+    attr_reader :host, :addr, :port
 
     ##
     # The socket address of the server
 
-    attr_reader :addr
-
     ##
     # The port this request is for
-
-    attr_reader :port
 
     ##
     # Creates a new SNIRequest.
@@ -116,7 +108,6 @@ module WEBrick
       @port = @addr[1]
     end
   end
-
 
   ##
   #--
@@ -135,6 +126,7 @@ module WEBrick
       if @config[:SSLEnable] && !server.ssl_context
         raise ArgumentError, "virtual host must set SSLEnable to true"
       end
+
       orig_virtual_host(server)
     end
 

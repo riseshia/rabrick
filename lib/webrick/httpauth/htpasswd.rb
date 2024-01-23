@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpauth/htpasswd -- Apache compatible htpasswd file
 #
@@ -14,7 +15,6 @@ require 'tempfile'
 
 module WEBrick
   module HTTPAuth
-
     ##
     # Htpasswd accesses apache-compatible password files.  Passwords are
     # matched to a realm where they are valid.  For security, the path for a
@@ -38,7 +38,7 @@ module WEBrick
       def initialize(path, password_hash: nil)
         @path = path
         @mtime = Time.at(0)
-        @passwd = Hash.new
+        @passwd = {}
         @auth_type = BasicAuth
         @password_hash = password_hash
 
@@ -58,7 +58,7 @@ module WEBrick
           raise ArgumentError, "only :crypt and :bcrypt are supported for password_hash keyword argument"
         end
 
-        File.open(@path,"a").close unless File.exist?(@path)
+        File.open(@path, "a").close unless File.exist?(@path)
         reload
       end
 
@@ -66,10 +66,10 @@ module WEBrick
       # Reload passwords from the database
 
       def reload
-        mtime = File::mtime(@path)
+        mtime = File.mtime(@path)
         if mtime > @mtime
           @passwd.clear
-          File.open(@path){|io|
+          File.open(@path) { |io|
             while line = io.gets
               line.chomp!
               case line
@@ -77,11 +77,13 @@ module WEBrick
                 if @password_hash == :bcrypt
                   raise StandardError, ".htpasswd file contains crypt password, only bcrypt passwords supported"
                 end
+
                 user, pass = line.split(":")
-              when %r!\A[^:]+:\$2[aby]\$\d{2}\$.{53}\z!
+              when /\A[^:]+:\$2[aby]\$\d{2}\$.{53}\z/
                 if @password_hash == :crypt
                   raise StandardError, ".htpasswd file contains bcrypt password, only crypt passwords supported"
                 end
+
                 user, pass = line.split(":")
               when /:\$/, /:{SHA}/
                 raise NotImplementedError,
@@ -100,14 +102,14 @@ module WEBrick
       # Flush the password database.  If +output+ is given the database will
       # be written there instead of to the original path.
 
-      def flush(output=nil)
+      def flush(output = nil)
         output ||= @path
-        tmp = Tempfile.create("htpasswd", File::dirname(output))
+        tmp = Tempfile.create("htpasswd", File.dirname(output))
         renamed = false
         begin
-          each{|item| tmp.puts(item.join(":")) }
+          each { |item| tmp.puts(item.join(":")) }
           tmp.close
-          File::rename(tmp.path, output)
+          File.rename(tmp.path, output)
           renamed = true
         ensure
           tmp.close
@@ -119,7 +121,7 @@ module WEBrick
       # Retrieves a password from the database for +user+ in +realm+.  If
       # +reload_db+ is true the database will be reloaded first.
 
-      def get_passwd(realm, user, reload_db)
+      def get_passwd(_realm, user, reload_db)
         reload() if reload_db
         @passwd[user]
       end
@@ -128,20 +130,20 @@ module WEBrick
       # Sets a password in the database for +user+ in +realm+ to +pass+.
 
       def set_passwd(realm, user, pass)
-        if @password_hash == :bcrypt
-          # Cost of 5 to match Apache default, and because the
-          # bcrypt default of 10 will introduce significant delays
-          # for every request.
-          @passwd[user] = BCrypt::Password.create(pass, :cost=>5)
-        else
-          @passwd[user] = make_passwd(realm, user, pass)
-        end
+        @passwd[user] = if @password_hash == :bcrypt
+                          # Cost of 5 to match Apache default, and because the
+                          # bcrypt default of 10 will introduce significant delays
+                          # for every request.
+                          BCrypt::Password.create(pass, :cost => 5)
+                        else
+                          make_passwd(realm, user, pass)
+                        end
       end
 
       ##
       # Removes a password from the database for +user+ in +realm+.
 
-      def delete_passwd(realm, user)
+      def delete_passwd(_realm, user)
         @passwd.delete(user)
       end
 
@@ -149,7 +151,7 @@ module WEBrick
       # Iterate passwords in the database.
 
       def each # :yields: [user, password]
-        @passwd.keys.sort.each{|user|
+        @passwd.keys.sort.each { |user|
           yield([user, @passwd[user]])
         }
       end

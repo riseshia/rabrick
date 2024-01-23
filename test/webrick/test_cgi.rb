@@ -1,5 +1,6 @@
 # coding: US-ASCII
 # frozen_string_literal: false
+
 require_relative "utils"
 require "webrick"
 require "test/unit"
@@ -13,36 +14,39 @@ class TestWEBrickCGI < Test::Unit::TestCase
   end
 
   def test_cgi
-    TestWEBrick.start_cgi_server{|server, addr, port, log|
+    TestWEBrick.start_cgi_server { |_server, addr, port, log|
       http = Net::HTTP.new(addr, port)
       req = Net::HTTP::Get.new("/webrick.cgi")
-      http.request(req){|res| assert_equal("/webrick.cgi", res.body, log.call)}
+      http.request(req) { |res| assert_equal("/webrick.cgi", res.body, log.call) }
       req = Net::HTTP::Get.new("/webrick.cgi/path/info")
-      http.request(req){|res| assert_equal("/path/info", res.body, log.call)}
+      http.request(req) { |res| assert_equal("/path/info", res.body, log.call) }
       req = Net::HTTP::Get.new("/webrick.cgi/%3F%3F%3F?foo=bar")
-      http.request(req){|res| assert_equal("/???", res.body, log.call)}
+      http.request(req) { |res| assert_equal("/???", res.body, log.call) }
       unless RUBY_PLATFORM =~ /mswin|mingw|cygwin|bccwin32|java/
         # Path info of res.body is passed via ENV.
         # ENV[] returns different value on Windows depending on locale.
         req = Net::HTTP::Get.new("/webrick.cgi/%A4%DB%A4%B2/%A4%DB%A4%B2")
-        http.request(req){|res|
-          assert_equal("/\xA4\xDB\xA4\xB2/\xA4\xDB\xA4\xB2", res.body, log.call)}
+        http.request(req) { |res|
+          assert_equal("/\xA4\xDB\xA4\xB2/\xA4\xDB\xA4\xB2", res.body, log.call)
+        }
       end
       req = Net::HTTP::Get.new("/webrick.cgi?a=1;a=2;b=x")
-      http.request(req){|res| assert_equal("a=1, a=2, b=x", res.body, log.call)}
+      http.request(req) { |res| assert_equal("a=1, a=2, b=x", res.body, log.call) }
       req = Net::HTTP::Get.new("/webrick.cgi?a=1&a=2&b=x")
-      http.request(req){|res| assert_equal("a=1, a=2, b=x", res.body, log.call)}
+      http.request(req) { |res| assert_equal("a=1, a=2, b=x", res.body, log.call) }
 
       req = Net::HTTP::Post.new("/webrick.cgi?a=x;a=y;b=1")
       req["Content-Type"] = "application/x-www-form-urlencoded"
-      http.request(req, "a=1;a=2;b=x"){|res|
-        assert_equal("a=1, a=2, b=x", res.body, log.call)}
+      http.request(req, "a=1;a=2;b=x") { |res|
+        assert_equal("a=1, a=2, b=x", res.body, log.call)
+      }
       req = Net::HTTP::Post.new("/webrick.cgi?a=x&a=y&b=1")
       req["Content-Type"] = "application/x-www-form-urlencoded"
-      http.request(req, "a=1&a=2&b=x"){|res|
-        assert_equal("a=1, a=2, b=x", res.body, log.call)}
+      http.request(req, "a=1&a=2&b=x") { |res|
+        assert_equal("a=1, a=2, b=x", res.body, log.call)
+      }
       req = Net::HTTP::Get.new("/")
-      http.request(req){|res|
+      http.request(req) { |res|
         ary = res.body.lines.to_a
         assert_match(%r{/$}, ary[0], log.call)
         assert_match(%r{/webrick.cgi$}, ary[1], log.call)
@@ -50,19 +54,20 @@ class TestWEBrickCGI < Test::Unit::TestCase
 
       req = Net::HTTP::Get.new("/webrick.cgi")
       req["Cookie"] = "CUSTOMER=WILE_E_COYOTE; PART_NUMBER=ROCKET_LAUNCHER_0001"
-      http.request(req){|res|
+      http.request(req) { |res|
         assert_equal(
           "CUSTOMER=WILE_E_COYOTE\nPART_NUMBER=ROCKET_LAUNCHER_0001\n",
-          res.body, log.call)
+          res.body, log.call
+        )
       }
 
       req = Net::HTTP::Get.new("/webrick.cgi")
-      cookie =  %{$Version="1"; }
-      cookie << %{Customer="WILE_E_COYOTE"; $Path="/acme"; }
-      cookie << %{Part_Number="Rocket_Launcher_0001"; $Path="/acme"; }
-      cookie << %{Shipping="FedEx"; $Path="/acme"}
+      cookie =  %($Version="1"; )
+      cookie << %(Customer="WILE_E_COYOTE"; $Path="/acme"; )
+      cookie << %(Part_Number="Rocket_Launcher_0001"; $Path="/acme"; )
+      cookie << %(Shipping="FedEx"; $Path="/acme")
       req["Cookie"] = cookie
-      http.request(req){|res|
+      http.request(req) { |res|
         assert_equal("Customer=WILE_E_COYOTE, Shipping=FedEx",
                      res["Set-Cookie"], log.call)
         assert_equal("Customer=WILE_E_COYOTE\n" +
@@ -73,10 +78,10 @@ class TestWEBrickCGI < Test::Unit::TestCase
   end
 
   def test_bad_request
-    log_tester = lambda {|log, access_log|
+    log_tester = lambda { |log, _access_log|
       assert_match(/BadRequest/, log.join)
     }
-    TestWEBrick.start_cgi_server({}, log_tester) {|server, addr, port, log|
+    TestWEBrick.start_cgi_server({}, log_tester) { |_server, addr, port, log|
       sock = TCPSocket.new(addr, port)
       begin
         sock << "POST /webrick.cgi HTTP/1.0" << CRLF
@@ -93,7 +98,7 @@ class TestWEBrickCGI < Test::Unit::TestCase
   end
 
   def test_cgi_env
-    TestWEBrick.start_cgi_server do |server, addr, port, log|
+    TestWEBrick.start_cgi_server do |_server, addr, port, _log|
       http = Net::HTTP.new(addr, port)
       req = Net::HTTP::Get.new("/webrick.cgi/dumpenv")
       req['proxy'] = 'http://example.com/'
@@ -111,12 +116,12 @@ class TestWEBrickCGI < Test::Unit::TestCase
   DumpPat = /#{Regexp.quote(CtrlSeq.dump[1...-1])}/o
 
   def test_bad_uri
-    log_tester = lambda {|log, access_log|
+    log_tester = lambda { |log, _access_log|
       assert_equal(1, log.length)
       assert_match(/ERROR bad URI/, log[0])
     }
-    TestWEBrick.start_cgi_server({}, log_tester) {|server, addr, port, log|
-      res = TCPSocket.open(addr, port) {|sock|
+    TestWEBrick.start_cgi_server({}, log_tester) { |_server, addr, port, log|
+      res = TCPSocket.open(addr, port) { |sock|
         sock << "GET /#{CtrlSeq}#{CRLF}#{CRLF}"
         sock.close_write
         sock.read
@@ -129,12 +134,12 @@ class TestWEBrickCGI < Test::Unit::TestCase
   end
 
   def test_bad_header
-    log_tester = lambda {|log, access_log|
+    log_tester = lambda { |log, _access_log|
       assert_equal(1, log.length)
       assert_match(/ERROR bad header/, log[0])
     }
-    TestWEBrick.start_cgi_server({}, log_tester) {|server, addr, port, log|
-      res = TCPSocket.open(addr, port) {|sock|
+    TestWEBrick.start_cgi_server({}, log_tester) { |_server, addr, port, log|
+      res = TCPSocket.open(addr, port) { |sock|
         sock << "GET / HTTP/1.0#{CRLF}#{CtrlSeq}#{CRLF}#{CRLF}"
         sock.close_write
         sock.read

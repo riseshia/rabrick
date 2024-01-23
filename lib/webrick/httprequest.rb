@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httprequest.rb -- HTTPRequest Class
 #
@@ -17,14 +18,12 @@ require_relative 'httputils'
 require_relative 'cookie'
 
 module WEBrick
-
   ##
   # An HTTP request.  This is consumed by service and do_* methods in
   # WEBrick servlets
 
   class HTTPRequest
-
-    BODY_CONTAINABLE_METHODS = [ "POST", "PUT" ] # :nodoc:
+    BODY_CONTAINABLE_METHODS = %w[POST PUT] # :nodoc:
 
     # :section: Request line
 
@@ -33,118 +32,79 @@ module WEBrick
     #
     #   GET / HTTP/1.1
 
-    attr_reader :request_line
+    attr_reader :request_line, :request_method, :unparsed_uri, :http_version, :request_uri, :path, :raw_header, :header, :cookies, :accept,
+                :accept_charset, :accept_encoding, :accept_language, :addr, :peeraddr, :attributes, :keep_alive, :request_time
 
     ##
     # The request method, GET, POST, PUT, etc.
 
-    attr_reader :request_method
-
     ##
     # The unparsed URI of the request
 
-    attr_reader :unparsed_uri
-
     ##
     # The HTTP version of the request
-
-    attr_reader :http_version
 
     # :section: Request-URI
 
     ##
     # The parsed URI of the request
 
-    attr_reader :request_uri
-
     ##
     # The request path
-
-    attr_reader :path
 
     ##
     # The script name (CGI variable)
 
-    attr_accessor :script_name
+    attr_accessor :script_name, :path_info, :query_string, :user
 
     ##
     # The path info (CGI variable)
 
-    attr_accessor :path_info
-
     ##
     # The query from the URI of the request
-
-    attr_accessor :query_string
 
     # :section: Header and entity body
 
     ##
     # The raw header of the request
 
-    attr_reader :raw_header
-
     ##
     # The parsed header of the request
-
-    attr_reader :header
 
     ##
     # The parsed request cookies
 
-    attr_reader :cookies
-
     ##
     # The Accept header value
-
-    attr_reader :accept
 
     ##
     # The Accept-Charset header value
 
-    attr_reader :accept_charset
-
     ##
     # The Accept-Encoding header value
 
-    attr_reader :accept_encoding
-
     ##
     # The Accept-Language header value
-
-    attr_reader :accept_language
 
     # :section:
 
     ##
     # The remote user (CGI variable)
 
-    attr_accessor :user
-
     ##
     # The socket address of the server
-
-    attr_reader :addr
 
     ##
     # The socket address of the client
 
-    attr_reader :peeraddr
-
     ##
     # Hash of request attributes
-
-    attr_reader :attributes
 
     ##
     # Is this a keep-alive connection?
 
-    attr_reader :keep_alive
-
     ##
     # The local time this request was received
-
-    attr_reader :request_time
 
     ##
     # Creates a new HTTP request.  WEBrick::Config::HTTP is the default
@@ -164,7 +124,7 @@ module WEBrick
       @query = nil
       @form_data = nil
 
-      @raw_header = Array.new
+      @raw_header = []
       @header = nil
       @cookies = []
       @accept = []
@@ -183,14 +143,14 @@ module WEBrick
       @socket = nil
 
       @forwarded_proto = @forwarded_host = @forwarded_port =
-        @forwarded_server = @forwarded_for = nil
+                           @forwarded_server = @forwarded_for = nil
     end
 
     ##
     # Parses a request from +socket+.  This is called internally by
     # WEBrick::HTTPServer.
 
-    def parse(socket=nil)
+    def parse(socket = nil)
       @socket = socket
       begin
         @peeraddr = socket.respond_to?(:peeraddr) ? socket.peeraddr : []
@@ -202,8 +162,8 @@ module WEBrick
       read_request_line(socket)
       if @http_version.major > 0
         read_header(socket)
-        @header['cookie'].each{|cookie|
-          @cookies += Cookie::parse(cookie)
+        @header['cookie'].each { |cookie|
+          @cookies += Cookie.parse(cookie)
         }
         @accept = HTTPUtils.parse_qvalues(self['accept'])
         @accept_charset = HTTPUtils.parse_qvalues(self['accept-charset'])
@@ -216,26 +176,24 @@ module WEBrick
       begin
         setup_forwarded_info
         @request_uri = parse_uri(@unparsed_uri)
-        @path = HTTPUtils::unescape(@request_uri.path)
-        @path = HTTPUtils::normalize_path(@path)
+        @path = HTTPUtils.unescape(@request_uri.path)
+        @path = HTTPUtils.normalize_path(@path)
         @host = @request_uri.host
         @port = @request_uri.port
         @query_string = @request_uri.query
         @script_name = ""
         @path_info = @path.dup
-      rescue
+      rescue StandardError
         raise HTTPStatus::BadRequest, "bad URI `#{@unparsed_uri}'."
       end
 
-      if /\Aclose\z/io =~ self["connection"]
-        @keep_alive = false
-      elsif /\Akeep-alive\z/io =~ self["connection"]
-        @keep_alive = true
-      elsif @http_version < "1.1"
-        @keep_alive = false
-      else
-        @keep_alive = true
-      end
+      @keep_alive = if /\Aclose\z/io =~ self["connection"]
+                      false
+                    elsif /\Akeep-alive\z/io =~ self["connection"]
+                      true
+                    else
+                      !(@http_version < "1.1")
+                    end
     end
 
     ##
@@ -253,7 +211,7 @@ module WEBrick
     # Returns the request body.
 
     def body(&block) # :yields: body_chunk
-      block ||= Proc.new{|chunk| @body << chunk }
+      block ||= proc { |chunk| @body << chunk }
       read_body(@socket, block)
       @body.empty? ? nil : @body
     end
@@ -302,14 +260,14 @@ module WEBrick
     # The content-length header
 
     def content_length
-      return Integer(self['content-length'])
+      Integer(self['content-length'])
     end
 
     ##
     # The content-type header
 
     def content_type
-      return self['content-type']
+      self['content-type']
     end
 
     ##
@@ -327,7 +285,7 @@ module WEBrick
 
     def each
       if @header
-        @header.each{|k, v|
+        @header.each { |k, _v|
           value = @header[k]
           yield(k, value.empty? ? nil : value.join(", "))
         }
@@ -338,35 +296,35 @@ module WEBrick
     # The host this request is for
 
     def host
-      return @forwarded_host || @host
+      @forwarded_host || @host
     end
 
     ##
     # The port this request is for
 
     def port
-      return @forwarded_port || @port
+      @forwarded_port || @port
     end
 
     ##
     # The server name this request is for
 
     def server_name
-      return @forwarded_server || @config[:ServerName]
+      @forwarded_server || @config[:ServerName]
     end
 
     ##
     # The client's IP address
 
     def remote_ip
-      return self["client-ip"] || @forwarded_for || @peeraddr[3]
+      self["client-ip"] || @forwarded_for || @peeraddr[3]
     end
 
     ##
     # Is this an SSL request?
 
     def ssl?
-      return @request_uri.scheme == "https"
+      @request_uri.scheme == "https"
     end
 
     ##
@@ -378,7 +336,7 @@ module WEBrick
 
     def to_s # :nodoc:
       ret = @request_line.dup
-      @raw_header.each{|line| ret << line }
+      @raw_header.each { |line| ret << line }
       ret << CRLF
       ret << body if body
       ret
@@ -387,16 +345,14 @@ module WEBrick
     ##
     # Consumes any remaining body and updates keep-alive status
 
-    def fixup() # :nodoc:
-      begin
-        body{|chunk| }   # read remaining body
-      rescue HTTPStatus::Error => ex
-        @logger.error("HTTPRequest#fixup: #{ex.class} occurred.")
-        @keep_alive = false
-      rescue => ex
-        @logger.error(ex)
-        @keep_alive = false
-      end
+    def fixup # :nodoc:
+      body { |chunk| } # read remaining body
+    rescue HTTPStatus::Error => e
+      @logger.error("HTTPRequest#fixup: #{e.class} occurred.")
+      @keep_alive = false
+    rescue StandardError => e
+      @logger.error(e)
+      @keep_alive = false
     end
 
     # This method provides the metavariables defined by the revision 3
@@ -405,7 +361,7 @@ module WEBrick
     # http://tools.ietf.org/html/rfc3875
 
     def meta_vars
-      meta = Hash.new
+      meta = {}
 
       cl = self["Content-Length"]
       ct = self["Content-Type"]
@@ -413,11 +369,11 @@ module WEBrick
       meta["CONTENT_TYPE"]      = ct.dup if ct
       meta["GATEWAY_INTERFACE"] = "CGI/1.1"
       meta["PATH_INFO"]         = @path_info ? @path_info.dup : ""
-     #meta["PATH_TRANSLATED"]   = nil      # no plan to be provided
+      # meta["PATH_TRANSLATED"]   = nil      # no plan to be provided
       meta["QUERY_STRING"]      = @query_string ? @query_string.dup : ""
       meta["REMOTE_ADDR"]       = @peeraddr[3]
       meta["REMOTE_HOST"]       = @peeraddr[2]
-     #meta["REMOTE_IDENT"]      = nil      # no plan to be provided
+      # meta["REMOTE_IDENT"]      = nil      # no plan to be provided
       meta["REMOTE_USER"]       = @user
       meta["REQUEST_METHOD"]    = @request_method.dup
       meta["REQUEST_URI"]       = @request_uri.to_s
@@ -427,9 +383,10 @@ module WEBrick
       meta["SERVER_PROTOCOL"]   = "HTTP/" + @config[:HTTPVersion].to_s
       meta["SERVER_SOFTWARE"]   = @config[:ServerSoftware].dup
 
-      self.each{|key, val|
+      each { |key, val|
         next if /^content-type$/i =~ key
         next if /^content-length$/i =~ key
+
         name = "HTTP_" + key
         name.gsub!(/-/o, "_")
         name.upcase!
@@ -458,10 +415,10 @@ module WEBrick
       end
 
       @request_time = Time.now
-      if /^(\S+)\s+(\S++)(?:\s+HTTP\/(\d+\.\d+))?\r?\n/mo =~ @request_line
-        @request_method = $1
-        @unparsed_uri   = $2
-        @http_version   = HTTPVersion.new($3 ? $3 : "0.9")
+      if %r{^(\S+)\s+(\S++)(?:\s+HTTP/(\d+\.\d+))?\r?\n}mo =~ @request_line
+        @request_method = ::Regexp.last_match(1)
+        @unparsed_uri   = ::Regexp.last_match(2)
+        @http_version   = HTTPVersion.new(::Regexp.last_match(3) || "0.9")
       else
         rl = @request_line.sub(/\x0d?\x0a\z/o, '')
         raise HTTPStatus::BadRequest, "bad Request-Line `#{rl}'."
@@ -475,10 +432,11 @@ module WEBrick
           if (@request_bytes += line.bytesize) > MAX_HEADER_LENGTH
             raise HTTPStatus::RequestEntityTooLarge, 'headers too large'
           end
+
           @raw_header << line
         end
       end
-      @header = HTTPUtils::parse_header(@raw_header.join)
+      @header = HTTPUtils.parse_header(@raw_header.join)
 
       if (content_length = @header['content-length']) && content_length.length != 0
         if content_length.length > 1
@@ -489,26 +447,30 @@ module WEBrick
       end
     end
 
-    def parse_uri(str, scheme="http")
+    def parse_uri(str, scheme = "http")
       if @config[:Escape8bitURI]
-        str = HTTPUtils::escape8bit(str)
+        str = HTTPUtils.escape8bit(str)
       end
       str.sub!(%r{\A/+}o, '/')
-      uri = URI::parse(str)
+      uri = URI.parse(str)
       return uri if uri.absolute?
+
       if @forwarded_host
-        host, port = @forwarded_host, @forwarded_port
+        host = @forwarded_host
+        port = @forwarded_port
       elsif self["host"]
         host, port = parse_host_request_line(self["host"])
       elsif @addr.size > 0
-        host, port = @addr[2], @addr[1]
+        host = @addr[2]
+        port = @addr[1]
       else
-        host, port = @config[:ServerName], @config[:Port]
+        host = @config[:ServerName]
+        port = @config[:Port]
       end
       uri.scheme = @forwarded_proto || scheme
       uri.host = host
       uri.port = port ? port.to_i : nil
-      return URI::parse(uri.to_s)
+      URI.parse(uri.to_s)
     end
 
     def parse_host_request_line(host)
@@ -518,6 +480,7 @@ module WEBrick
 
     def read_body(socket, block)
       return unless socket
+
       if tc = self['transfer-encoding']
         case tc
         when /\Achunked\z/io then read_chunked(socket, block)
@@ -528,6 +491,7 @@ module WEBrick
         while @remaining_size > 0
           sz = [@buffer_size, @remaining_size].min
           break unless buf = read_data(socket, sz)
+
           @remaining_size -= buf.bytesize
           block.call(buf)
         end
@@ -537,15 +501,15 @@ module WEBrick
       elsif BODY_CONTAINABLE_METHODS.member?(@request_method)
         raise HTTPStatus::LengthRequired
       end
-      return @body
+      @body
     end
 
     def read_chunk_size(socket)
       line = read_line(socket)
       if /^([0-9a-fA-F]+)(?:;(\S+))?/ =~ line
-        chunk_size = $1.hex
-        chunk_ext = $2
-        [ chunk_size, chunk_ext ]
+        chunk_size = ::Regexp.last_match(1).hex
+        chunk_ext = ::Regexp.last_match(2)
+        [chunk_size, chunk_ext]
       else
         raise HTTPStatus::BadRequest, "bad chunk `#{line}'."
       end
@@ -555,11 +519,12 @@ module WEBrick
       chunk_size, = read_chunk_size(socket)
       while chunk_size > 0
         begin
-          sz = [ chunk_size, @buffer_size ].min
+          sz = [chunk_size, @buffer_size].min
           data = read_data(socket, sz) # read chunk-data
           if data.nil? || data.bytesize != sz
             raise HTTPStatus::BadRequest, "bad chunk data size."
           end
+
           block.call(data)
         end while (chunk_size -= sz) > 0
 
@@ -572,18 +537,16 @@ module WEBrick
     end
 
     def _read_data(io, method, *arg)
-      begin
-        WEBrick::Utils.timeout(@config[:RequestTimeout]){
-          return io.__send__(method, *arg)
-        }
-      rescue Errno::ECONNRESET
-        return nil
-      rescue Timeout::Error
-        raise HTTPStatus::RequestTimeout
-      end
+      WEBrick::Utils.timeout(@config[:RequestTimeout]) {
+        return io.__send__(method, *arg)
+      }
+    rescue Errno::ECONNRESET
+      nil
+    rescue Timeout::Error
+      raise HTTPStatus::RequestTimeout
     end
 
-    def read_line(io, size=4096)
+    def read_line(io, size = 4096)
       _read_data(io, :gets, LF, size)
     end
 
@@ -591,21 +554,19 @@ module WEBrick
       _read_data(io, :read, size)
     end
 
-    def parse_query()
-      begin
-        if @request_method == "GET" || @request_method == "HEAD"
-          @query = HTTPUtils::parse_query(@query_string)
-        elsif self['content-type'] =~ /^application\/x-www-form-urlencoded/
-          @query = HTTPUtils::parse_query(body)
-        elsif self['content-type'] =~ /^multipart\/form-data; boundary=(.+)/
-          boundary = HTTPUtils::dequote($1)
-          @query = HTTPUtils::parse_form_data(body, boundary)
-        else
-          @query = Hash.new
-        end
-      rescue => ex
-        raise HTTPStatus::BadRequest, ex.message
+    def parse_query
+      if @request_method == "GET" || @request_method == "HEAD"
+        @query = HTTPUtils.parse_query(@query_string)
+      elsif self['content-type'] =~ %r{^application/x-www-form-urlencoded}
+        @query = HTTPUtils.parse_query(body)
+      elsif self['content-type'] =~ %r{^multipart/form-data; boundary=(.+)}
+        boundary = HTTPUtils.dequote(::Regexp.last_match(1))
+        @query = HTTPUtils.parse_form_data(body, boundary)
+      else
+        @query = {}
       end
+    rescue StandardError => e
+      raise HTTPStatus::BadRequest, e.message
     end
 
     PrivateNetworkRegexp = /
@@ -629,8 +590,8 @@ module WEBrick
       if host_port = self["x-forwarded-host"]
         host_port = host_port.split(",", 2).first
         if host_port =~ /\A(\[[0-9a-fA-F:]+\])(?::(\d+))?\z/
-          @forwarded_host = $1
-          tmp = $2
+          @forwarded_host = ::Regexp.last_match(1)
+          tmp = ::Regexp.last_match(2)
         else
           @forwarded_host, tmp = host_port.split(":", 2)
         end
@@ -638,7 +599,7 @@ module WEBrick
       end
       if addrs = self["x-forwarded-for"]
         addrs = addrs.split(",").collect(&:strip)
-        addrs.reject!{|ip| PrivateNetworkRegexp =~ ip }
+        addrs.reject! { |ip| PrivateNetworkRegexp =~ ip }
         @forwarded_for = addrs.first
       end
     end

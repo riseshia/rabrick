@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # compat.rb -- cross platform compatibility
 #

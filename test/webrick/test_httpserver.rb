@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 require "test/unit"
 require "net/http"
 require "webrick"
@@ -20,7 +21,7 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   def test_mount
     httpd = WEBrick::HTTPServer.new(
       :Logger => NoLog,
-      :DoNotListen=>true
+      :DoNotListen => true
     )
     httpd.mount("/", :Root)
     httpd.mount("/foo", :Foo)
@@ -71,31 +72,35 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
 
     serv, opts, script_name, path_info = httpd.search_servlet("/foo/bar/baz")
     assert_equal(:Baz, serv)
-    assert_equal([:baz1, :baz2], opts)
+    assert_equal(%i[baz1 baz2], opts)
     assert_equal("/foo/bar/baz", script_name)
     assert_equal("", path_info)
   end
 
   class Req
     attr_reader :port, :host
+
     def initialize(addr, port, host)
-      @addr, @port, @host = addr, port, host
+      @addr = addr
+      @port = port
+      @host = host
     end
+
     def addr
-      [0,0,0,@addr]
+      [0, 0, 0, @addr]
     end
   end
 
   def httpd(addr, port, host, ali)
-    config ={
-      :Logger      => NoLog,
+    config = {
+      :Logger => NoLog,
       :DoNotListen => true,
       :BindAddress => addr,
-      :Port        => port,
-      :ServerName  => host,
-      :ServerAlias => ali,
+      :Port => port,
+      :ServerName => host,
+      :ServerAlias => ali
     }
-    return WEBrick::HTTPServer.new(config)
+    WEBrick::HTTPServer.new(config)
   end
 
   def assert_eql?(v1, v2)
@@ -109,8 +114,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     local  = "127.0.0.1"
     port1  = 80
     port2  = 8080
-    port3  = 10080
-    portz  = 32767
+    port3  = 10_080
+    portz  = 32_767
     name1  = "www.example.com"
     name2  = "www2.example.com"
     name3  = "www3.example.com"
@@ -128,14 +133,14 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
       host3  = httpd(addr1, port1, name2, alias1),
       host4  = httpd(addr1, port2, name1, nil),
       host5  = httpd(addr1, port2, name2, alias1),
-               httpd(addr1, port2, name3, alias2),
+      httpd(addr1, port2, name3, alias2),
       host7  = httpd(addr2, nil,   name1, nil),
       host8  = httpd(addr2, nil,   name2, alias1),
-               httpd(addr2, nil,   name3, alias2),
+      httpd(addr2, nil, name3, alias2),
       host10 = httpd(local, nil,   nil,   nil),
-      host11 = httpd(nil,   port3, nil,   nil),
-    ].sort_by{ rand }
-    hosts.each{|h| host1.virtual_host(h) }
+      host11 = httpd(nil,   port3, nil,   nil)
+    ].sort_by { rand }
+    hosts.each { |h| host1.virtual_host(h) }
 
     # connect to addr1
     assert_eql?(host2,   host1.lookup_server(Req.new(addr1, port1, name1)))
@@ -228,6 +233,7 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
 
   class CustomRequest < ::WEBrick::HTTPRequest; end
   class CustomResponse < ::WEBrick::HTTPResponse; end
+
   class CustomServer < ::WEBrick::HTTPServer
     def create_request(config)
       CustomRequest.new(config)
@@ -240,8 +246,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
 
   def test_custom_server_request_and_response
     config = { :ServerName => "localhost" }
-    TestWEBrick.start_server(CustomServer, config){|server, addr, port, log|
-      server.mount_proc("/", lambda {|req, res|
+    TestWEBrick.start_server(CustomServer, config) { |server, addr, port, _log|
+      server.mount_proc("/", lambda { |req, res|
         assert_kind_of(CustomRequest, req)
         assert_kind_of(CustomResponse, res)
         res.body = "via custom response"
@@ -250,7 +256,7 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
 
       Net::HTTP.start(addr, port) do |http|
         req = Net::HTTP::Get.new("/")
-        http.request(req){|res|
+        http.request(req) { |res|
           assert_equal("via custom response", res.body)
         }
         server.shutdown
@@ -263,60 +269,62 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     def initialize
       @listeners = []
     end
-    def add_listener( &block )
+
+    def add_listener(&block)
       @listeners << block
     end
-    def raise_str_event( str )
-      @listeners.each{ |e| e.call( :str, str ) }
+
+    def raise_str_event(str)
+      @listeners.each { |e| e.call(:str, str) }
     end
-    def raise_close_event()
-      @listeners.each{ |e| e.call( :cls ) }
+
+    def raise_close_event
+      @listeners.each { |e| e.call(:cls) }
     end
   end
+
   def test_response_io_with_chunked_set
     evt_man = EventManagerForChunkedResponseTest.new
     t = Thread.new do
-      begin
-        config = {
-          :ServerName => "localhost"
-        }
-        TestWEBrick.start_httpserver(config) do |server, addr, port, log|
-          body_strs = [ 'aaaaaa', 'bb', 'cccc' ]
-          server.mount_proc( "/", ->( req, res ){
-            # Test for setting chunked...
-            res.chunked = true
-            r,w = IO.pipe
-            evt_man.add_listener do |type,str|
-              type == :cls ? ( w.close ) : ( w << str )
-            end
-            res.body = r
-          } )
-          Thread.pass while server.status != :Running
-          http = Net::HTTP.new(addr, port)
-          req  = Net::HTTP::Get.new("/")
-          http.request(req) do |res|
-            i = 0
-            evt_man.raise_str_event( body_strs[i] )
-            res.read_body do |s|
-              assert_equal( body_strs[i], s )
-              i += 1
-              if i < body_strs.length
-                evt_man.raise_str_event( body_strs[i] )
-              else
-                evt_man.raise_close_event()
-              end
-            end
-            assert_equal( body_strs.length, i )
+      config = {
+        :ServerName => "localhost"
+      }
+      TestWEBrick.start_httpserver(config) do |server, addr, port, _log|
+        body_strs = %w[aaaaaa bb cccc]
+        server.mount_proc("/", lambda { |_req, res|
+          # Test for setting chunked...
+          res.chunked = true
+          r, w = IO.pipe
+          evt_man.add_listener do |type, str|
+            type == :cls ? w.close : (w << str)
           end
+          res.body = r
+        })
+        Thread.pass while server.status != :Running
+        http = Net::HTTP.new(addr, port)
+        req  = Net::HTTP::Get.new("/")
+        http.request(req) do |res|
+          i = 0
+          evt_man.raise_str_event(body_strs[i])
+          res.read_body do |s|
+            assert_equal(body_strs[i], s)
+            i += 1
+            if i < body_strs.length
+              evt_man.raise_str_event(body_strs[i])
+            else
+              evt_man.raise_close_event()
+            end
+          end
+          assert_equal(body_strs.length, i)
         end
-      rescue => err
-        flunk( 'exception raised in thread: ' + err.to_s )
       end
+    rescue StandardError => e
+      flunk('exception raised in thread: ' + e.to_s)
     end
-    if t.join( 3 ).nil?
+    if t.join(3).nil?
       evt_man.raise_close_event()
-      flunk( 'timeout' )
-      if t.join( 1 ).nil?
+      flunk('timeout')
+      if t.join(1).nil?
         Thread.kill t
       end
     end
@@ -326,12 +334,12 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     config = {
       :ServerName => "localhost"
     }
-    log_tester = lambda {|log, access_log|
+    log_tester = lambda { |log, _access_log|
       assert_empty log
     }
-    TestWEBrick.start_httpserver(config, log_tester){|server, addr, port, log|
-      server.mount_proc("/", lambda { |req, res|
-        r,w = IO.pipe
+    TestWEBrick.start_httpserver(config, log_tester) { |server, addr, port, _log|
+      server.mount_proc("/", lambda { |_req, res|
+        r, w = IO.pipe
         # Test for not setting chunked...
         # res.chunked = true
         res.body = r
@@ -344,7 +352,7 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
       req['Connection'] = 'Keep-Alive'
       begin
         Timeout.timeout(2) do
-          http.request(req){|res| assert_equal("foo", res.body) }
+          http.request(req) { |res| assert_equal("foo", res.body) }
         end
       rescue Timeout::Error
         flunk('corrupted response')
@@ -355,19 +363,22 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   def test_shutdown_with_busy_keepalive_connection
     requested = 0
     config = {
-      :ServerName => "localhost",
+      :ServerName => "localhost"
     }
-    TestWEBrick.start_httpserver(config){|server, addr, port, log|
-      server.mount_proc("/", lambda {|req, res| res.body = "heffalump" })
+    TestWEBrick.start_httpserver(config) { |server, addr, port, log|
+      server.mount_proc("/", ->(_req, res) { res.body = "heffalump" })
       Thread.pass while server.status != :Running
 
       Net::HTTP.start(addr, port) do |http|
         req = Net::HTTP::Get.new("/")
-        http.request(req){|res| assert_equal('Keep-Alive', res['Connection'], log.call) }
+        http.request(req) { |res| assert_equal('Keep-Alive', res['Connection'], log.call) }
         server.shutdown
         begin
-          10.times {|n| http.request(req); requested += 1 }
-        rescue
+          10.times { |_n|
+            http.request(req)
+            requested += 1
+          }
+        rescue StandardError
           # Errno::ECONNREFUSED or similar
         end
       end
@@ -382,7 +393,7 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
       :Port => 0,
       :BindAddress => '127.0.0.1',
       :Logger => WEBrick::Log.new(log_ary, WEBrick::BasicLog::WARN),
-      :AccessLog => [[access_log_ary, '']],
+      :AccessLog => [[access_log_ary, '']]
     }
     s = WEBrick::HTTPServer.new(config)
     s.mount('/foo', WEBrick::HTTPServlet::FileHandler, __FILE__)
@@ -392,7 +403,7 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     http = Net::HTTP.new(addr[3], addr[1])
     req = Net::HTTP::Get.new('/notexist%0a/foo')
     http.request(req) { |res| assert_equal('404', res.code) }
-    exp = %Q(ERROR `/notexist\\n/foo' not found.\n)
+    exp = %(ERROR `/notexist\\n/foo' not found.\n)
     assert_equal 1, log_ary.size
     assert_include log_ary[0], exp
   ensure
@@ -401,11 +412,11 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_gigantic_request_header
-    log_tester = lambda {|log, access_log|
+    log_tester = lambda { |log, _access_log|
       assert_equal 1, log.size
       assert_include log[0], 'ERROR headers too large'
     }
-    TestWEBrick.start_httpserver({}, log_tester){|server, addr, port, log|
+    TestWEBrick.start_httpserver({}, log_tester) { |server, addr, port, _log|
       server.mount('/', WEBrick::HTTPServlet::FileHandler, __FILE__)
       TCPSocket.open(addr, port) do |c|
         c.write("GET / HTTP/1.0\r\n")
@@ -418,11 +429,11 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_eof_in_chunk
-    log_tester = lambda do |log, access_log|
+    log_tester = lambda do |log, _access_log|
       assert_equal 1, log.size
       assert_include log[0], 'ERROR bad chunk data size'
     end
-    TestWEBrick.start_httpserver({}, log_tester){|server, addr, port, log|
+    TestWEBrick.start_httpserver({}, log_tester) { |server, addr, port, _log|
       server.mount_proc('/', ->(req, res) { res.body = req.body })
       TCPSocket.open(addr, port) do |c|
         c.write("POST / HTTP/1.1\r\nHost: example.com\r\n" \
@@ -440,8 +451,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     config = { :InputBufferSize => 2 }.freeze
     total = 0
     all = ''
-    TestWEBrick.start_httpserver(config){|server, addr, port, log|
-      server.mount_proc('/', ->(req, res) {
+    TestWEBrick.start_httpserver(config) { |server, addr, port, _log|
+      server.mount_proc('/', lambda { |req, res|
         err = []
         ret = req.body do |chunk|
           n = chunk.bytesize
@@ -468,8 +479,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_accept_put_requests
-    TestWEBrick.start_httpserver do |server, addr, port, log|
-      server.mount_proc("/", lambda {|req, res|
+    TestWEBrick.start_httpserver do |server, addr, port, _log|
+      server.mount_proc("/", lambda { |req, res|
         res.status = 200
         assert_equal("abcde", req.body)
       })

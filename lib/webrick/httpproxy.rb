@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #
 # httpproxy.rb -- HTTPProxy Class
 #
@@ -14,10 +15,9 @@ require_relative "httpserver"
 require "net/http"
 
 module WEBrick
-
   NullReader = Object.new # :nodoc:
   class << NullReader # :nodoc:
-    def read(*args)
+    def read(*_args)
       nil
     end
     alias gets read
@@ -26,9 +26,10 @@ module WEBrick
   FakeProxyURI = Object.new # :nodoc:
   class << FakeProxyURI # :nodoc:
     def method_missing(meth, *args)
-      if %w(scheme host port path query userinfo).member?(meth.to_s)
+      if %w[scheme host port path query userinfo].member?(meth.to_s)
         return nil
       end
+
       super
     end
   end
@@ -67,7 +68,6 @@ module WEBrick
   #     WEBrick::HTTPProxyServer.new Port: 8000, ProxyContentHandler: handler
 
   class HTTPProxyServer < HTTPServer
-
     ##
     # Proxy server configurations.  The proxy server handles the following
     # configuration items in addition to those supported by HTTPServer:
@@ -81,7 +81,7 @@ module WEBrick
     # :ProxyTimeout:: Sets the proxy timeouts to 30 seconds for open and 60
     #                 seconds for read operations
 
-    def initialize(config={}, default=Config::HTTP)
+    def initialize(config = {}, default = Config::HTTP)
       super(config, default)
       c = @config
       @via = "#{c[:HTTPVersion]} #{c[:ServerName]}:#{c[:Port]}"
@@ -91,7 +91,7 @@ module WEBrick
     def service(req, res)
       if req.request_method == "CONNECT"
         do_CONNECT(req, res)
-      elsif req.unparsed_uri =~ %r!^http://!
+      elsif req.unparsed_uri =~ %r{^http://}
         proxy_service(req, res)
       else
         super(req, res)
@@ -105,9 +105,9 @@ module WEBrick
       req.header.delete("proxy-authorization")
     end
 
-    def proxy_uri(req, res)
+    def proxy_uri(_req, _res)
       # should return upstream proxy server's URI
-      return @config[:ProxyURI]
+      @config[:ProxyURI]
     end
 
     def proxy_service(req, res)
@@ -118,10 +118,10 @@ module WEBrick
         public_send("do_#{req.request_method}", req, res)
       rescue NoMethodError
         raise HTTPStatus::MethodNotAllowed,
-          "unsupported method `#{req.request_method}'."
-      rescue => err
-        logger.debug("#{err.class}: #{err.message}")
-        raise HTTPStatus::ServiceUnavailable, err.message
+              "unsupported method `#{req.request_method}'."
+      rescue StandardError => e
+        logger.debug("#{e.class}: #{e.message}")
+        raise HTTPStatus::ServiceUnavailable, e.message
       end
 
       # Process contents
@@ -134,9 +134,11 @@ module WEBrick
       # Proxy Authentication
       proxy_auth(req, res)
 
-      ua = Thread.current[:WEBrickSocket]  # User-Agent
-      raise HTTPStatus::InternalServerError,
-        "[BUG] cannot get socket" unless ua
+      ua = Thread.current[:WEBrickSocket] # User-Agent
+      unless ua
+        raise HTTPStatus::InternalServerError,
+              "[BUG] cannot get socket"
+      end
 
       host, port = req.unparsed_uri.split(":", 2)
       # Proxy authentication for upstream proxy server
@@ -145,12 +147,13 @@ module WEBrick
         if proxy.userinfo
           credentials = "Basic " + [proxy.userinfo].pack("m0")
         end
-        host, port = proxy.host, proxy.port
+        host = proxy.host
+        port = proxy.port
       end
 
       begin
         @logger.debug("CONNECT: upstream proxy is `#{host}:#{port}'.")
-        os = TCPSocket.new(host, port)     # origin server
+        os = TCPSocket.new(host, port) # origin server
 
         if proxy
           @logger.debug("CONNECT: sending a Request-Line")
@@ -174,9 +177,9 @@ module WEBrick
         end
         @logger.debug("CONNECT #{host}:#{port}: succeeded")
         res.status = HTTPStatus::RC_OK
-      rescue => ex
-        @logger.debug("CONNECT #{host}:#{port}: failed `#{ex.message}'")
-        res.set_error(ex)
+      rescue StandardError => e
+        @logger.debug("CONNECT #{host}:#{port}: failed `#{e.message}'")
+        res.set_error(e)
         raise HTTPStatus::EOFError
       ensure
         if handler = @config[:ProxyContentHandler]
@@ -187,22 +190,26 @@ module WEBrick
 
         # Should clear request-line not to send the response twice.
         # see: HTTPServer#run
-        req.parse(NullReader) rescue nil
+        begin
+          req.parse(NullReader)
+        rescue StandardError
+          nil
+        end
       end
 
       begin
-        while fds = IO::select([ua, os])
+        while fds = IO.select([ua, os])
           if fds[0].member?(ua)
-            buf = ua.readpartial(1024);
+            buf = ua.readpartial(1024)
             @logger.debug("CONNECT: #{buf.bytesize} byte from User-Agent")
             os.write(buf)
           elsif fds[0].member?(os)
-            buf = os.readpartial(1024);
+            buf = os.readpartial(1024)
             @logger.debug("CONNECT: #{buf.bytesize} byte from #{host}:#{port}")
             ua.write(buf)
           end
         end
-      rescue
+      rescue StandardError
         os.close
         @logger.debug("CONNECT #{host}:#{port}: closed")
       end
@@ -222,21 +229,21 @@ module WEBrick
       perform_proxy_request(req, res, Net::HTTP::Post, req.body_reader)
     end
 
-    def do_OPTIONS(req, res)
+    def do_OPTIONS(_req, res)
       res['allow'] = "GET,HEAD,POST,OPTIONS,CONNECT"
     end
 
     private
 
     # Some header fields should not be transferred.
-    HopByHop = %w( connection keep-alive proxy-authenticate upgrade
-                   proxy-authorization te trailers transfer-encoding )
-    ShouldNotTransfer = %w( set-cookie proxy-connection )
-    def split_field(f) f ? f.split(/,\s+/).collect{|i| i.downcase } : [] end
+    HopByHop = %w[ connection keep-alive proxy-authenticate upgrade
+                   proxy-authorization te trailers transfer-encoding ]
+    ShouldNotTransfer = %w[set-cookie proxy-connection]
+    def split_field(f) = f ? f.split(/,\s+/).collect { |i| i.downcase } : []
 
     def choose_header(src, dst)
       connections = split_field(src['connection'])
-      src.each{|key, value|
+      src.each { |key, value|
         key = key.downcase
         if HopByHop.member?(key)          || # RFC2616: 13.5.1
            connections.member?(key)       || # RFC2616: 14.10
@@ -253,7 +260,7 @@ module WEBrick
     def set_cookie(src, dst)
       if str = src['set-cookie']
         cookies = []
-        str.split(/,\s*/).each{|token|
+        str.split(/,\s*/).each { |token|
           if /^[^=]+;/o =~ token
             cookies[-1] << ", " << token
           elsif /=/o =~ token
@@ -268,7 +275,7 @@ module WEBrick
 
     def set_via(h)
       if @config[:ProxyVia]
-        if  h['via']
+        if h['via']
           h['via'] << ", " << @via
         else
           h['via'] = @via
@@ -276,12 +283,12 @@ module WEBrick
       end
     end
 
-    def setup_proxy_header(req, res)
+    def setup_proxy_header(req, _res)
       # Choose header fields to transfer
-      header = Hash.new
+      header = {}
       choose_header(req, header)
       set_via(header)
-      return header
+      header
     end
 
     def setup_upstream_proxy_authentication(req, res, header)
@@ -292,7 +299,7 @@ module WEBrick
         end
         return upstream
       end
-      return FakeProxyURI
+      FakeProxyURI
     end
 
     def create_net_http(uri, upstream)
@@ -341,13 +348,13 @@ module WEBrick
         end
       end
       req_fib.resume # read HTTP response headers and first chunk of the body
-      res.body = ->(socket) do
+      res.body = lambda { |socket|
         while buf = body_tmp.shift
           socket.write(buf)
           buf.clear
           req_fib.resume # continue response.read_body
         end
-      end
+      }
     end
     # :stopdoc:
   end

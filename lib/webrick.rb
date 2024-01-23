@@ -1,4 +1,5 @@
 # frozen_string_literal: false
+
 ##
 # = WEB server toolkit.
 #
@@ -211,22 +212,22 @@
 module WEBrick
 end
 
-require 'webrick/compat.rb'
+require 'webrick/compat'
 
-require 'webrick/version.rb'
-require 'webrick/config.rb'
-require 'webrick/log.rb'
-require 'webrick/server.rb'
-require_relative 'webrick/utils.rb'
+require 'webrick/version'
+require 'webrick/config'
+require 'webrick/log'
+require 'webrick/server'
+require_relative 'webrick/utils'
 require 'webrick/accesslog'
 
-require 'webrick/htmlutils.rb'
-require 'webrick/httputils.rb'
-require 'webrick/cookie.rb'
-require 'webrick/httpversion.rb'
-require 'webrick/httpstatus.rb'
-require 'webrick/httprequest.rb'
-require 'webrick/httpresponse.rb'
-require 'webrick/httpserver.rb'
-require 'webrick/httpservlet.rb'
-require 'webrick/httpauth.rb'
+require 'webrick/htmlutils'
+require 'webrick/httputils'
+require 'webrick/cookie'
+require 'webrick/httpversion'
+require 'webrick/httpstatus'
+require 'webrick/httprequest'
+require 'webrick/httpresponse'
+require 'webrick/httpserver'
+require 'webrick/httpservlet'
+require 'webrick/httpauth'

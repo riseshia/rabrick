@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 #--
 # version.rb -- version and release date
 #
@@ -10,9 +11,8 @@
 # $IPR: version.rb,v 1.74 2003/07/22 19:20:43 gotoyuzo Exp $
 
 module WEBrick
-
   ##
   # The WEBrick version
 
-  VERSION      = "1.8.1"
+  VERSION = "1.8.1"
 end
