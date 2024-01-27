@@ -1,10 +1,6 @@
 # frozen_string_literal: false
 
 require "webrick"
-begin
-  require "webrick/https"
-rescue LoadError
-end
 require "webrick/httpproxy"
 
 module TestWEBrick

@@ -243,13 +243,6 @@ module WEBrick
       when :wait_readable
         nil
       else
-        if svr.respond_to?(:start_immediately)
-          sock = OpenSSL::SSL::SSLSocket.new(sock, ssl_context)
-          sock.sync_close = true
-          # we cannot do OpenSSL::SSL::SSLSocket#accept here because
-          # a slow client can prevent us from accepting connections
-          # from other clients
-        end
         sock
       end
     rescue Errno::ECONNRESET, Errno::ECONNABORTED,
@@ -280,14 +273,6 @@ module WEBrick
           rescue SocketError
             WEBrick::RactorLogger.debug "accept: <address unknown>"
             raise
-          end
-          if sock.respond_to?(:sync_close=) && @config[:SSLStartImmediately]
-            WEBrick::Utils.timeout(@config[:RequestTimeout]) do
-              sock.accept # OpenSSL::SSL::SSLSocket#accept
-            rescue Errno::ECONNRESET, Errno::ECONNABORTED,
-                   Errno::EPROTO, Errno::EINVAL
-              Thread.exit
-            end
           end
           run(sock)
         rescue Errno::ENOTCONN

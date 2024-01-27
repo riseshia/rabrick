@@ -3,7 +3,7 @@
 ##
 # = WEB server toolkit.
 #
-# WEBrick is an HTTP server toolkit that can be configured as an HTTPS server,
+# WEBrick is an HTTP server toolkit that can be configured as
 # a proxy server, and a virtual-host server.  WEBrick features complete
 # logging of both server operations and HTTP access.  WEBrick supports both
 # basic and digest authentication in addition to algorithms not in RFC 2617.
@@ -74,40 +74,6 @@
 #
 # See WEBrick::HTTPServlet::AbstractServlet for more details.
 #
-# == HTTPS
-#
-# To create an HTTPS server you only need to enable SSL and provide an SSL
-# certificate name:
-#
-#   require 'webrick'
-#   require 'webrick/https'
-#
-#   cert_name = [
-#     %w[CN localhost],
-#   ]
-#
-#   server = WEBrick::HTTPServer.new(:Port => 8000,
-#                                    :SSLEnable => true,
-#                                    :SSLCertName => cert_name)
-#
-# This will start the server with a self-generated self-signed certificate.
-# The certificate will be changed every time the server is restarted.
-#
-# To create a server with a pre-determined key and certificate you can provide
-# them:
-#
-#   require 'webrick'
-#   require 'webrick/https'
-#   require 'openssl'
-#
-#   cert = OpenSSL::X509::Certificate.new File.read '/path/to/cert.pem'
-#   pkey = OpenSSL::PKey::RSA.new File.read '/path/to/pkey.pem'
-#
-#   server = WEBrick::HTTPServer.new(:Port => 8000,
-#                                    :SSLEnable => true,
-#                                    :SSLCertificate => cert,
-#                                    :SSLPrivateKey => pkey)
-#
 # == Proxy Server
 #
 # WEBrick can act as a proxy server:
@@ -140,7 +106,7 @@
 # === Dropping Permissions
 #
 # WEBrick can be started as one user to gain permission to bind to port 80 or
-# 443 for serving HTTP or HTTPS traffic then can drop these permissions for
+# 443 for serving HTTP traffic then can drop these permissions for
 # regular operation.  To listen on all interfaces for HTTP traffic:
 #
 #   sockets = WEBrick::Utils.create_listeners nil, 80

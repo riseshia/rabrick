@@ -266,48 +266,6 @@ module WEBrick
       def write(data)
         @out_port.write(data)
       end
-
-      def cert
-        return nil unless defined?(OpenSSL)
-
-        if (pem = @env["SSL_SERVER_CERT"]) && !pem.empty?
-          OpenSSL::X509::Certificate.new(pem)
-        end
-      end
-
-      def peer_cert
-        return nil unless defined?(OpenSSL)
-
-        if (pem = @env["SSL_CLIENT_CERT"]) && !pem.empty?
-          OpenSSL::X509::Certificate.new(pem)
-        end
-      end
-
-      def peer_cert_chain
-        return nil unless defined?(OpenSSL)
-
-        if @env["SSL_CLIENT_CERT_CHAIN_0"]
-          keys = @env.keys
-          certs = keys.sort.collect { |k|
-            if /^SSL_CLIENT_CERT_CHAIN_\d+$/ =~ k && (pem = @env[k]) && !pem.empty?
-              OpenSSL::X509::Certificate.new(pem)
-            end
-          }
-          certs.compact
-        end
-      end
-
-      def cipher
-        return nil unless defined?(OpenSSL)
-
-        if cipher = @env["SSL_CIPHER"]
-          ret = [cipher]
-          ret << @env["SSL_PROTOCOL"]
-          ret << @env["SSL_CIPHER_USEKEYSIZE"]
-          ret << @env["SSL_CIPHER_ALGKEYSIZE"]
-          ret
-        end
-      end
     end
   end
 end

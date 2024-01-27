@@ -37,7 +37,6 @@ Gem::Specification.new do |s|
     "lib/webrick/httpproxy.rb",
     "lib/webrick/httprequest.rb",
     "lib/webrick/httpresponse.rb",
-    "lib/webrick/https.rb",
     "lib/webrick/httpserver.rb",
     "lib/webrick/httpservlet.rb",
     "lib/webrick/httpservlet/abstract.rb",
@@ -51,7 +50,6 @@ Gem::Specification.new do |s|
     "lib/webrick/httpversion.rb",
     "lib/webrick/log.rb",
     "lib/webrick/server.rb",
-    "lib/webrick/ssl.rb",
     "lib/webrick/utils.rb",
     "lib/webrick/version.rb",
     "webrick.gemspec"
