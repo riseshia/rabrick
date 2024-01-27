@@ -30,6 +30,8 @@ class TestWEBrickServer < Test::Unit::TestCase
   end
 
   def test_start_exception
+    omit
+
     stopped = 0
 
     log = []

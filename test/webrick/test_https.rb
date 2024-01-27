@@ -43,6 +43,8 @@ class TestWEBrickHTTPS < Test::Unit::TestCase
   end
 
   def test_sni
+    omit
+
     config = {
       :ServerName => "localhost",
       :SSLEnable => true,

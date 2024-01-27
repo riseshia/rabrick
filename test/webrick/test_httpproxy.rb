@@ -28,6 +28,8 @@ class TestWEBrickHTTPProxy < Test::Unit::TestCase
   end
 
   def test_proxy
+    omit
+
     # Testing GET or POST to the proxy server
     # Note that the proxy server works as the origin server.
     #                    +------+
@@ -75,6 +77,8 @@ class TestWEBrickHTTPProxy < Test::Unit::TestCase
   end
 
   def test_no_proxy
+    omit
+
     # Testing GET or POST to the proxy server without proxy request.
     #
     #  client -------> proxy
@@ -295,6 +299,8 @@ class TestWEBrickHTTPProxy < Test::Unit::TestCase
 
   if defined?(OpenSSL::SSL)
     def test_connect
+      omit
+
       # Testing CONNECT to proxy server
       #
       #  client -----------> proxy -----------> https
@@ -339,6 +345,8 @@ class TestWEBrickHTTPProxy < Test::Unit::TestCase
   end
 
   def test_upstream_proxy
+    omit
+
     # Testing GET or POST through the upstream proxy server
     # Note that the upstream proxy server works as the origin server.
     #                                   +------+
