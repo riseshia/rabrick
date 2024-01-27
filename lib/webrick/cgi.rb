@@ -67,7 +67,6 @@ module WEBrick
         @config.update(config)
       end
       @config[:Logger] ||= WEBrick::BasicLog.new($stderr)
-      @logger = @config[:Logger]
       @options = args
     end
 
@@ -116,7 +115,7 @@ module WEBrick
       rescue HTTPStatus::Status => e
         res.status = e.code
       rescue Exception => e
-        @logger.error(e)
+        WEBrick::RactorLogger.error(e)
         res.set_error(e, true)
       ensure
         req.fixup

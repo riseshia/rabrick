@@ -152,21 +152,21 @@ module WEBrick
       end
 
       begin
-        @logger.debug("CONNECT: upstream proxy is `#{host}:#{port}'.")
+        WEBrick::RactorLogger.debug("CONNECT: upstream proxy is `#{host}:#{port}'.")
         os = TCPSocket.new(host, port) # origin server
 
         if proxy
-          @logger.debug("CONNECT: sending a Request-Line")
+          WEBrick::RactorLogger.debug("CONNECT: sending a Request-Line")
           os << proxy_request_line << CRLF
-          @logger.debug("CONNECT: > #{proxy_request_line}")
+          WEBrick::RactorLogger.debug("CONNECT: > #{proxy_request_line}")
           if credentials
-            @logger.debug("CONNECT: sending credentials")
+            WEBrick::RactorLogger.debug("CONNECT: sending credentials")
             os << "Proxy-Authorization: " << credentials << CRLF
           end
           os << CRLF
           proxy_status_line = os.gets(LF)
-          @logger.debug("CONNECT: read Status-Line from the upstream server")
-          @logger.debug("CONNECT: < #{proxy_status_line}")
+          WEBrick::RactorLogger.debug("CONNECT: read Status-Line from the upstream server")
+          WEBrick::RactorLogger.debug("CONNECT: < #{proxy_status_line}")
           if %r{^HTTP/\d+\.\d+\s+200\s*} =~ proxy_status_line
             while line = os.gets(LF)
               break if /\A(#{CRLF}|#{LF})\z/om =~ line
@@ -175,10 +175,10 @@ module WEBrick
             raise HTTPStatus::BadGateway
           end
         end
-        @logger.debug("CONNECT #{host}:#{port}: succeeded")
+        WEBrick::RactorLogger.debug("CONNECT #{host}:#{port}: succeeded")
         res.status = HTTPStatus::RC_OK
       rescue StandardError => e
-        @logger.debug("CONNECT #{host}:#{port}: failed `#{e.message}'")
+        WEBrick::RactorLogger.debug("CONNECT #{host}:#{port}: failed `#{e.message}'")
         res.set_error(e)
         raise HTTPStatus::EOFError
       ensure
@@ -201,17 +201,17 @@ module WEBrick
         while fds = IO.select([ua, os])
           if fds[0].member?(ua)
             buf = ua.readpartial(1024)
-            @logger.debug("CONNECT: #{buf.bytesize} byte from User-Agent")
+            WEBrick::RactorLogger.debug("CONNECT: #{buf.bytesize} byte from User-Agent")
             os.write(buf)
           elsif fds[0].member?(os)
             buf = os.readpartial(1024)
-            @logger.debug("CONNECT: #{buf.bytesize} byte from #{host}:#{port}")
+            WEBrick::RactorLogger.debug("CONNECT: #{buf.bytesize} byte from #{host}:#{port}")
             ua.write(buf)
           end
         end
       rescue StandardError
         os.close
-        @logger.debug("CONNECT #{host}:#{port}: closed")
+        WEBrick::RactorLogger.debug("CONNECT #{host}:#{port}: closed")
       end
 
       raise HTTPStatus::EOFError
@@ -248,7 +248,7 @@ module WEBrick
         if HopByHop.member?(key)          || # RFC2616: 13.5.1
            connections.member?(key)       || # RFC2616: 14.10
            ShouldNotTransfer.member?(key)    # pragmatics
-          @logger.debug("choose_header: `#{key}: #{value}'")
+          WEBrick::RactorLogger.debug("choose_header: `#{key}: #{value}'")
           next
         end
         dst[key] = value

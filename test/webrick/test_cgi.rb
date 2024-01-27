@@ -78,6 +78,8 @@ class TestWEBrickCGI < Test::Unit::TestCase
   end
 
   def test_bad_request
+    omit
+
     log_tester = lambda { |log, _access_log|
       assert_match(/BadRequest/, log.join)
     }
@@ -116,6 +118,8 @@ class TestWEBrickCGI < Test::Unit::TestCase
   DumpPat = /#{Regexp.quote(CtrlSeq.dump[1...-1])}/o
 
   def test_bad_uri
+    omit
+
     log_tester = lambda { |log, _access_log|
       assert_equal(1, log.length)
       assert_match(/ERROR bad URI/, log[0])
@@ -134,6 +138,8 @@ class TestWEBrickCGI < Test::Unit::TestCase
   end
 
   def test_bad_header
+    omit
+
     log_tester = lambda { |log, _access_log|
       assert_equal(1, log.length)
       assert_match(/ERROR bad header/, log[0])

@@ -91,12 +91,12 @@ module WEBrick
         rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => e
           res.set_error(e)
         rescue HTTPStatus::Error => e
-          @logger.error(e.message)
+          WEBrick::RactorLogger.error(e.message)
           res.set_error(e)
         rescue HTTPStatus::Status => e
           res.status = e.code
         rescue StandardError => e
-          @logger.error(e)
+          WEBrick::RactorLogger.error(e)
           res.set_error(e, true)
         ensure
           if req.request_line
@@ -131,7 +131,7 @@ module WEBrick
       req.script_name = script_name
       req.path_info = path_info
       si = servlet.get_instance(self, *options)
-      @logger.debug(format("%s is invoked.", si.class.name))
+      WEBrick::RactorLogger.debug(format("%s is invoked.", si.class.name))
       si.service(req, res)
     end
 
@@ -148,7 +148,7 @@ module WEBrick
     # time
 
     def mount(dir, servlet, *options)
-      @logger.debug(format("%s is mounted on %s.", servlet.inspect, dir))
+      WEBrick::RactorLogger.debug(format("%s is mounted on %s.", servlet.inspect, dir))
       @mount_tab[dir] = [servlet, options]
     end
 
@@ -167,7 +167,7 @@ module WEBrick
     # Unmounts +dir+
 
     def unmount(dir)
-      @logger.debug(format("unmount %s.", dir))
+      WEBrick::RactorLogger.debug(format("unmount %s.", dir))
       @mount_tab.delete(dir)
     end
     alias umount unmount

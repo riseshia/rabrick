@@ -203,7 +203,6 @@ module WEBrick
 
       def initialize(server, root, options = {}, default = Config::FileHandler)
         @config = server.config
-        @logger = @config[:Logger]
         @root = File.expand_path(root)
         if [true, false].include?(options)
           options = { :FancyIndexing => options }
@@ -235,7 +234,7 @@ module WEBrick
             req.script_name = script_name
             req.path_info = path_info
           rescue StandardError
-            @logger.debug "#{self.class}#do_GET: getpwnam(#{user}) failed"
+            WEBrick::RactorLogger.debug "#{self.class}#do_GET: getpwnam(#{user}) failed"
           end
         end
         prevent_directory_traversal(req, res)
@@ -363,7 +362,7 @@ module WEBrick
 
       def check_filename(req, _res, name)
         if nondisclosure_name?(name) || windows_ambiguous_name?(name)
-          @logger.warn("the request refers nondisclosure name `#{name}'.")
+          WEBrick::RactorLogger.warn("the request refers nondisclosure name `#{name}'.")
           raise HTTPStatus::NotFound, "`#{req.path}' not found."
         end
       end

@@ -48,7 +48,7 @@ module WEBrick
 
       def do_GET(req, res)
         unless defined?(ERB)
-          @logger.warn "#{self.class}: ERB not defined."
+          WEBrick::RactorLogger.warn "#{self.class}: ERB not defined."
           raise HTTPStatus::Forbidden, "ERBHandler cannot work."
         end
         begin
@@ -59,7 +59,7 @@ module WEBrick
         rescue StandardError
           raise
         rescue Exception => e
-          @logger.error(e)
+          WEBrick::RactorLogger.error(e)
           raise HTTPStatus::InternalServerError, e.message
         end
       end

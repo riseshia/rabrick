@@ -148,7 +148,7 @@ module WEBrick
     def ssl_context # :nodoc:
       @ssl_context ||= if @config[:SSLEnable]
                          ssl_context = setup_ssl_context(@config)
-                         @logger.info("\n" + @config[:SSLCertificate].to_text)
+                         WEBrick::RactorLogger.info("\n" + @config[:SSLCertificate].to_text)
                          ssl_context
                        end
     end

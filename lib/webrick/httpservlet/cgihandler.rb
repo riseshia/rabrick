@@ -79,13 +79,13 @@ module WEBrick
           data = cgi_out.read
           cgi_out.close(true)
           if (errmsg = cgi_err.read) && (errmsg.bytesize > 0)
-            @logger.error("CGIHandler: #{@script_filename}:\n" + errmsg)
+            WEBrick::RactorLogger.error("CGIHandler: #{@script_filename}:\n" + errmsg)
           end
           cgi_err.close(true)
         end
 
         if status != 0
-          @logger.error("CGIHandler: #{@script_filename} exit with #{status}")
+          WEBrick::RactorLogger.error("CGIHandler: #{@script_filename} exit with #{status}")
         end
 
         data ||= ""

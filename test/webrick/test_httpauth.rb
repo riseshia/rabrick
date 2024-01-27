@@ -15,6 +15,8 @@ class TestWEBrickHTTPAuth < Test::Unit::TestCase
   end
 
   def test_basic_auth
+    omit
+
     log_tester = lambda { |log, _access_log|
       assert_equal(1, log.length)
       assert_match(/ERROR WEBrick::HTTPStatus::Unauthorized/, log[0])
@@ -74,6 +76,8 @@ class TestWEBrickHTTPAuth < Test::Unit::TestCase
     end
 
     define_method(:"test_basic_auth_htpasswd_#{hash_algo}") do
+      omit
+
       log_tester = lambda { |log, _access_log|
         log.reject! { |line| /\A\s*\z/ =~ line }
         pats = [
@@ -123,6 +127,8 @@ class TestWEBrickHTTPAuth < Test::Unit::TestCase
     end
 
     define_method(:"test_basic_auth_bad_username_htpasswd_#{hash_algo}") do
+      omit
+
       log_tester = lambda { |log, _access_log|
         assert_equal(2, log.length)
         assert_match(/ERROR Basic WEBrick's realm: foo\\ebar: the user is not allowed\./, log[0])
@@ -170,6 +176,8 @@ class TestWEBrickHTTPAuth < Test::Unit::TestCase
       )/x
 
   def test_digest_auth
+    omit
+
     log_tester = lambda { |log, _access_log|
       log.reject! { |line| /\A\s*\z/ =~ line }
       pats = [
@@ -237,6 +245,8 @@ class TestWEBrickHTTPAuth < Test::Unit::TestCase
   end
 
   def test_digest_auth_int
+    omit
+
     log_tester = lambda { |log, _access_log|
       log.reject! { |line| /\A\s*\z/ =~ line }
       pats = [

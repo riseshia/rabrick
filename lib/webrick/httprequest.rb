@@ -113,7 +113,6 @@ module WEBrick
     def initialize(config)
       @config = config
       @buffer_size = @config[:InputBufferSize]
-      @logger = config[:Logger]
 
       @request_line = @request_method =
         @unparsed_uri = @http_version = nil
@@ -348,10 +347,10 @@ module WEBrick
     def fixup # :nodoc:
       body { |chunk| } # read remaining body
     rescue HTTPStatus::Error => e
-      @logger.error("HTTPRequest#fixup: #{e.class} occurred.")
+      WEBrick::RactorLogger.error("HTTPRequest#fixup: #{e.class} occurred.")
       @keep_alive = false
     rescue StandardError => e
-      @logger.error(e)
+      WEBrick::RactorLogger.error(e)
       @keep_alive = false
     end
 

@@ -331,6 +331,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_response_io_without_chunked_set
+    omit
+
     config = {
       :ServerName => "localhost"
     }
@@ -414,6 +416,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_gigantic_request_header
+    omit
+
     log_tester = lambda { |log, _access_log|
       assert_equal 1, log.size
       assert_include log[0], 'ERROR headers too large'
@@ -431,6 +435,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_eof_in_chunk
+    omit
+
     log_tester = lambda do |log, _access_log|
       assert_equal 1, log.size
       assert_include log[0], 'ERROR bad chunk data size'

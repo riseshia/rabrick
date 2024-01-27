@@ -94,7 +94,6 @@ module WEBrick
     def initialize(config)
       @config = config
       @buffer_size = config[:OutputBufferSize]
-      @logger = config[:Logger]
       @header = {}
       @status = HTTPStatus::RC_OK
       @reason_phrase = nil
@@ -217,10 +216,10 @@ module WEBrick
       send_header(socket)
       send_body(socket)
     rescue Errno::EPIPE, Errno::ECONNRESET, Errno::ENOTCONN => e
-      @logger.debug(e)
+      WEBrick::RactorLogger.debug(e)
       @keep_alive = false
     rescue Exception => e
-      @logger.error(e)
+      WEBrick::RactorLogger.error(e)
       @keep_alive = false
     end
 
@@ -251,7 +250,7 @@ module WEBrick
         @chunked = false
         ver = @request_http_version.to_s
         msg = "chunked is set for an HTTP/#{ver} request. (ignored)"
-        @logger.warn(msg)
+        WEBrick::RactorLogger.warn(msg)
       end
 
       # Determine the message length (RFC2616 -- 4.4 Message Length)
@@ -279,7 +278,7 @@ module WEBrick
           @header['connection'] = "Keep-Alive"
         else
           msg = "Could not determine content-length of response body. Set content-length of the response or set Response#chunked = true"
-          @logger.warn(msg)
+          WEBrick::RactorLogger.warn(msg)
           @header['connection'] = "close"
           @keep_alive = false
         end

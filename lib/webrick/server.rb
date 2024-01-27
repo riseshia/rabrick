@@ -78,15 +78,14 @@ module WEBrick
       @config = default.dup.update(config)
       @status = :Stop
       @config[:Logger] ||= Log.new
-      @logger = @config[:Logger]
 
       @tokens = Thread::SizedQueue.new(@config[:MaxClients])
       @config[:MaxClients].times { @tokens.push(nil) }
 
       webrickv = WEBrick::VERSION
       rubyv = "#{RUBY_VERSION} (#{RUBY_RELEASE_DATE}) [#{RUBY_PLATFORM}]"
-      @logger.info("WEBrick #{webrickv}")
-      @logger.info("ruby #{rubyv}")
+      WEBrick::RactorLogger.info("WEBrick #{webrickv}")
+      WEBrick::RactorLogger.info("ruby #{rubyv}")
 
       @listeners = []
       @shutdown_pipe = nil
@@ -148,7 +147,7 @@ module WEBrick
       setup_shutdown_pipe
 
       server_type.start {
-        @logger.info \
+        WEBrick::RactorLogger.info \
           "#{self.class}#start: pid=#{$$} port=#{@config[:Port]}"
         @status = :Running
 
@@ -185,9 +184,9 @@ module WEBrick
               # IO::select raise it.
             rescue StandardError => e
               msg = "#{e.class}: #{e.message}\n\t#{e.backtrace[0]}"
-              @logger.error msg
+              WEBrick::RactorLogger.error msg
             rescue Exception => e
-              @logger.fatal e
+              WEBrick::RactorLogger.fatal e
               raise
             end
           end
@@ -195,9 +194,9 @@ module WEBrick
           cleanup_shutdown_pipe(shutdown_pipe)
           cleanup_listener
           @status = :Shutdown
-          @logger.info "going to shutdown ..."
+          WEBrick::RactorLogger.info "going to shutdown ..."
           thgroup.list.each { |th| th.join if th[:WEBrickThread] }
-          @logger.info "#{self.class}#start done."
+          WEBrick::RactorLogger.info "#{self.class}#start done."
           @status = :Stop
         end
       }
@@ -229,7 +228,7 @@ module WEBrick
     # client socket
 
     def run(_sock)
-      @logger.fatal "run() must be provided by user."
+      WEBrick::RactorLogger.fatal "run() must be provided by user."
     end
 
     private
@@ -259,7 +258,7 @@ module WEBrick
       nil
     rescue StandardError => e
       msg = "#{e.class}: #{e.message}\n\t#{e.backtrace[0]}"
-      @logger.error msg
+      WEBrick::RactorLogger.error msg
       nil
     end
 
@@ -278,9 +277,9 @@ module WEBrick
           Thread.current[:WEBrickSocket] = sock
           begin
             addr = sock.peeraddr
-            @logger.debug "accept: #{addr[3]}:#{addr[1]}"
+            WEBrick::RactorLogger.debug "accept: #{addr[3]}:#{addr[1]}"
           rescue SocketError
-            @logger.debug "accept: <address unknown>"
+            WEBrick::RactorLogger.debug "accept: <address unknown>"
             raise
           end
           if sock.respond_to?(:sync_close=) && @config[:SSLStartImmediately]
@@ -293,19 +292,19 @@ module WEBrick
           end
           run(sock)
         rescue Errno::ENOTCONN
-          @logger.debug "Errno::ENOTCONN raised"
+          WEBrick::RactorLogger.debug "Errno::ENOTCONN raised"
         rescue ServerError => e
           msg = "#{e.class}: #{e.message}\n\t#{e.backtrace[0]}"
-          @logger.error msg
+          WEBrick::RactorLogger.error msg
         rescue Exception => e
-          @logger.error e
+          WEBrick::RactorLogger.error e
         ensure
           @tokens.push(nil)
           Thread.current[:WEBrickSocket] = nil
           if addr
-            @logger.debug "close: #{addr[3]}:#{addr[1]}"
+            WEBrick::RactorLogger.debug "close: #{addr[3]}:#{addr[1]}"
           else
-            @logger.debug "close: <address unknown>"
+            WEBrick::RactorLogger.debug "close: <address unknown>"
           end
           sock.close
         end
@@ -333,9 +332,9 @@ module WEBrick
 
     def cleanup_listener
       @listeners.each { |s|
-        if @logger.debug?
+        if WEBrick::RactorLogger.debug?
           addr = s.addr
-          @logger.debug("close TCPSocket(#{addr[2]}, #{addr[1]})")
+          WEBrick::RactorLogger.debug("close TCPSocket(#{addr[2]}, #{addr[1]})")
         end
         begin
           s.shutdown

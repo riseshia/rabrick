@@ -90,7 +90,6 @@ module WEBrick
 
       def initialize(server, *options)
         @server = @config = server
-        @logger = @server[:Logger]
         @options = options
       end
 

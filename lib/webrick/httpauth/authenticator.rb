@@ -52,7 +52,6 @@ module WEBrick
         }
         @realm     = config[:Realm]
         @userdb    = config[:UserDB]
-        @logger    = config[:Logger] || Log.new($stderr)
         @reload_db = config[:AutoReloadUserDB]
         @request_field   = self.class::RequestField
         @response_field  = self.class::ResponseField
@@ -80,17 +79,17 @@ module WEBrick
       def log(meth, fmt, *args)
         msg = format("%s %s: ", @auth_scheme, @realm)
         msg << fmt % args
-        @logger.__send__(meth, msg)
+        WEBrick::RactorLogger.__send__(meth, msg)
       end
 
       def error(fmt, *args)
-        if @logger.error?
+        if WEBrick::RactorLogger.error?
           log(:error, fmt, *args)
         end
       end
 
       def info(fmt, *args)
-        if @logger.info?
+        if WEBrick::RactorLogger.info?
           log(:info, fmt, *args)
         end
       end
