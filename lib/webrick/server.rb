@@ -77,7 +77,6 @@ module WEBrick
     def initialize(config = {}, default = Config::General)
       @config = default.dup.update(config)
       @status = :Stop
-      @config[:Logger] ||= Log.new
 
       @tokens = Thread::SizedQueue.new(@config[:MaxClients])
       @config[:MaxClients].times { @tokens.push(nil) }
