@@ -60,8 +60,6 @@ module WEBrick
       end
       @config[:ServerName] # Touch to load default value
       @config = WEBrick::Config.make_shareable(@config)
-
-      @virtual_hosts = []
     end
 
     ##
@@ -88,7 +86,7 @@ module WEBrick
           res.request_uri = req.request_uri
           res.request_http_version = req.http_version
           res.keep_alive = req.keep_alive?
-          server = lookup_server(req) || self
+
           server.service(req, res)
         rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => e
           res.set_error(e)
@@ -183,32 +181,6 @@ module WEBrick
       if servlet
         [servlet, options, script_name, path_info]
       end
-    end
-
-    ##
-    # Adds +server+ as a virtual host.
-
-    def virtual_host(server)
-      @virtual_hosts << server
-      @virtual_hosts = @virtual_hosts.sort_by { |s|
-        num = 0
-        num -= 4 if s[:BindAddress]
-        num -= 2 if s[:Port]
-        num -= 1 if s[:ServerName]
-        num
-      }
-    end
-
-    ##
-    # Finds the appropriate virtual host to handle +req+
-
-    def lookup_server(req)
-      @virtual_hosts.find { |s|
-        (s[:BindAddress].nil? || req.addr[3] == s[:BindAddress]) &&
-          (s[:Port].nil?        || req.port == s[:Port]) &&
-          ((s[:ServerName].nil? || req.host == s[:ServerName]) ||
-           (!s[:ServerAlias].nil? && s[:ServerAlias].find { |h| h === req.host }))
-      }
     end
 
     ##

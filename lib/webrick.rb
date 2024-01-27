@@ -74,23 +74,6 @@
 #
 # See WEBrick::HTTPServlet::AbstractServlet for more details.
 #
-# == Virtual Hosts
-#
-# A server can act as a virtual host for multiple host names.  After creating
-# the listening host, additional hosts that do not listen can be created and
-# attached as virtual hosts:
-#
-#   server = WEBrick::HTTPServer.new # ...
-#
-#   vhost = WEBrick::HTTPServer.new :ServerName => 'vhost.example',
-#                                   :DoNotListen => true, # ...
-#   vhost.mount '/', ...
-#
-#   server.virtual_host vhost
-#
-# If no +:DocumentRoot+ is provided and no servlets or procs are mounted on the
-# main server it will return 404 for all URLs.
-#
 # == HTTPS
 #
 # To create an HTTPS server you only need to enable SSL and provide an SSL
