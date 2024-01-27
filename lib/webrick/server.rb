@@ -13,6 +13,7 @@
 require 'socket'
 require_relative 'config'
 require_relative 'log'
+require_relative 'request_handler'
 
 module WEBrick
   ##

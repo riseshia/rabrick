@@ -66,51 +66,13 @@ module WEBrick
     # Processes requests on +sock+
 
     def run(sock)
-      while true
-        req = create_request(@config)
-        res = create_response(@config)
-        server = self
-        begin
-          timeout = @config[:RequestTimeout]
-          while timeout > 0
-            break if sock.to_io.wait_readable(0.5)
-            break if @status != :Running
-
-            timeout -= 0.5
-          end
-          raise HTTPStatus::EOFError if timeout <= 0 || @status != :Running
-          raise HTTPStatus::EOFError if sock.eof?
-
-          req.parse(sock)
-          res.request_method = req.request_method
-          res.request_uri = req.request_uri
-          res.request_http_version = req.http_version
-          res.keep_alive = req.keep_alive?
-
-          server.service(req, res)
-        rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => e
-          res.set_error(e)
-        rescue HTTPStatus::Error => e
-          WEBrick::RactorLogger.error(e.message)
-          res.set_error(e)
-        rescue HTTPStatus::Status => e
-          res.status = e.code
-        rescue StandardError => e
-          WEBrick::RactorLogger.error(e)
-          res.set_error(e, true)
-        ensure
-          if req.request_line
-            if req.keep_alive? && res.keep_alive?
-              req.fixup()
-            end
-            res.send_response(sock)
-            server.access_log(@config, req, res)
-          end
-        end
-        break if @http_version < "1.1"
-        break unless req.keep_alive?
-        break unless res.keep_alive?
-      end
+      WEBrick::RequestHandler.run(
+        config: @config,
+        http_version: @http_version,
+        sock: sock,
+        status: @status,
+        mount_tab: @mount_tab
+      )
     end
 
     ##

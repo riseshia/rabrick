@@ -49,6 +49,7 @@ Gem::Specification.new do |s|
     "lib/webrick/httputils.rb",
     "lib/webrick/httpversion.rb",
     "lib/webrick/log.rb",
+    "lib/webrick/request_handler.rb",
     "lib/webrick/server.rb",
     "lib/webrick/utils.rb",
     "lib/webrick/version.rb",
