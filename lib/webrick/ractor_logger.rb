@@ -1,49 +1,60 @@
+# frozen_string_literal: true
+# shareable_constant_value: experimental_everything
+
 module WEBrick
   module RactorLogger
     module_function
 
     def fatal(msg)
-      RactorLoggerInternal.send([:fatal, msg])
+      StderrLoggerRactor.send([:fatal, msg])
     end
 
     def error(msg)
-      RactorLoggerInternal.send([:error, msg])
+      StderrLoggerRactor.send([:error, msg])
     end
 
     def warn(msg)
-      RactorLoggerInternal.send([:warn, msg])
+      StderrLoggerRactor.send([:warn, msg])
     end
 
     def info(msg)
-      RactorLoggerInternal.send([:info, msg])
+      StderrLoggerRactor.send([:info, msg])
     end
 
     def debug(msg)
-      RactorLoggerInternal.send([:debug, msg])
+      StderrLoggerRactor.send([:debug, msg])
     end
 
     def fatal?
-      RactorLoggerInternal.send([:fatal?])
+      StderrLoggerRactor.send([:fatal?])
     end
 
     def error?
-      RactorLoggerInternal.send([:error?])
+      StderrLoggerRactor.send([:error?])
     end
 
     def warn?
-      RactorLoggerInternal.send([:warn?])
+      StderrLoggerRactor.send([:warn?])
     end
 
     def info?
-      RactorLoggerInternal.send([:info?])
+      StderrLoggerRactor.send([:info?])
     end
 
     def debug?
-      RactorLoggerInternal.send([:debug?])
+      StderrLoggerRactor.send([:debug?])
     end
   end
 
-  RactorLoggerInternal = Ractor.new do
+  module RactorAccessLogger
+    module_function
+
+    def puts(str)
+      AccessLoggerRactor.send(str)
+    end
+  end
+
+  StderrLoggerRactor = Ractor.new do
     logger = WEBrick::Log.new($stderr)
 
     loop do
@@ -53,6 +64,13 @@ module WEBrick
       else
         logger.send(m, v)
       end
+    end
+  end
+
+  AccessLoggerRactor = Ractor.new do
+    loop do
+      msg = Ractor.receive
+      $stdout.puts msg
     end
   end
 end

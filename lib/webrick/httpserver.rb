@@ -54,8 +54,8 @@ module WEBrick
 
       unless @config[:AccessLog]
         @config[:AccessLog] = [
-          [$stderr, AccessLog::COMMON_LOG_FORMAT],
-          [$stderr, AccessLog::REFERER_LOG_FORMAT]
+          AccessLog::COMMON_LOG_FORMAT,
+          AccessLog::REFERER_LOG_FORMAT
         ]
       end
 
@@ -215,8 +215,9 @@ module WEBrick
 
     def access_log(config, req, res)
       param = AccessLog.setup_params(config, req, res)
-      @config[:AccessLog].each { |logger, fmt|
-        logger << AccessLog.format(fmt + "\n", param)
+      @config[:AccessLog].each { |fmt|
+        AccessLog.format(fmt + "\n", param)
+        WEBrick::RactorAccessLogger.puts(AccessLog.format(fmt + "\n", param))
       }
     end
 
