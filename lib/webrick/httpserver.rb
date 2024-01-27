@@ -58,6 +58,8 @@ module WEBrick
           AccessLog::REFERER_LOG_FORMAT
         ]
       end
+      @config[:ServerName] # Touch to load default value
+      @config = WEBrick::Config.make_shareable(@config)
 
       @virtual_hosts = []
     end

@@ -85,6 +85,7 @@ module WEBrick
       def initialize(config, default = Config::DigestAuth)
         check_init(config)
         @config                 = default.dup.update(config)
+        @config                 = WEBrick::Config.make_shareable(@config)
         @algorithm              = @config[:Algorithm]
         @domain                 = @config[:Domain]
         @qop                    = @config[:Qop]

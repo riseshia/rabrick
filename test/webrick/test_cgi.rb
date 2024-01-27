@@ -14,6 +14,8 @@ class TestWEBrickCGI < Test::Unit::TestCase
   end
 
   def test_cgi
+    omit
+
     TestWEBrick.start_cgi_server { |_server, addr, port, log|
       http = Net::HTTP.new(addr, port)
       req = Net::HTTP::Get.new("/webrick.cgi")

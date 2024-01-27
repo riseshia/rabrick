@@ -138,5 +138,18 @@ module WEBrick
       :InternetExplorerHack => true,
       :OperaHack => true
     }
+
+    module_function
+
+    def make_shareable(config)
+      # To eliminate init Proc, initialize new hash and copy values.
+      new_config = {}.tap do |h|
+        config.each do |k, v|
+          h[k] = v
+        end
+      end
+
+      Ractor.make_shareable(new_config)
+    end
   end
 end

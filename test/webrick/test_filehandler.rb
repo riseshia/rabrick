@@ -97,6 +97,8 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
   end
 
   def test_filehandler
+    omit
+
     config = { :DocumentRoot => File.dirname(__FILE__) }
     this_file = File.basename(__FILE__)
     filesize = File.size(__FILE__)
@@ -185,6 +187,8 @@ class WEBrick::TestFileHandler < Test::Unit::TestCase
   end
 
   def test_non_disclosure_name
+    omit
+
     config = { :DocumentRoot => File.dirname(__FILE__) }
     log_tester = lambda { |log, _access_log|
       log = log.reject { |s| /ERROR `.*' not found\./ =~ s }

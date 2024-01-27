@@ -61,6 +61,8 @@ module WEBrick
       def initialize(config, default = Config::BasicAuth)
         check_init(config)
         @config = default.dup.update(config)
+        @config[:ServerName] # Touch to load default value
+        @config = WEBrick::Config.make_shareable(@config)
       end
 
       ##

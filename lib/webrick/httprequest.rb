@@ -112,6 +112,8 @@ module WEBrick
 
     def initialize(config)
       @config = config
+      @config[:ServerName] # Touch to load default value
+      @config = WEBrick::Config.make_shareable(@config)
       @buffer_size = @config[:InputBufferSize]
 
       @request_line = @request_method =

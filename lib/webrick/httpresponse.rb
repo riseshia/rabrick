@@ -93,6 +93,8 @@ module WEBrick
 
     def initialize(config)
       @config = config
+      @config[:ServerName] # Touch to load default value
+      @config = WEBrick::Config.make_shareable(@config)
       @buffer_size = config[:OutputBufferSize]
       @header = {}
       @status = HTTPStatus::RC_OK

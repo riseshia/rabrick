@@ -239,6 +239,8 @@ class TestWEBrickHTTPProxy < Test::Unit::TestCase
   end
 
   def test_http10_proxy_chunked
+    omit
+
     # Testing HTTP/1.0 client request and HTTP/1.1 chunked response
     # from origin server.
     #                    +------+

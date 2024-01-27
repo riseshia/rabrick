@@ -63,9 +63,12 @@ module WEBrick
         :RunOnCGI => true, # to detect if it runs on CGI.
         :NPH => false # set true to run as NPH script.
       )
+      @config[:ServerName] # Touch to load default value
+
       if config = args.shift
         @config.update(config)
       end
+      @config = WEBrick::Config.make_shareable(@config)
       @options = args
     end
 
@@ -180,6 +183,9 @@ module WEBrick
         @remote_addr = @env["REMOTE_ADDR"]
         @remote_host = @env["REMOTE_HOST"] || @remote_addr
         @remote_port = @env["REMOTE_PORT"] || 0
+
+        @config[:ServerName] # Touch to load default value
+        @config = WEBrick::Config.make_shareable(@config)
 
         begin
           @header_part << request_line << CRLF
