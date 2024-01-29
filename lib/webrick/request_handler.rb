@@ -38,14 +38,17 @@ module WEBrick
 
           service(mount_tab, req, res)
         rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => e
+          puts e.backtrace.join("\n")
           res.set_error(e)
         rescue HTTPStatus::Error => e
+          puts e.backtrace.join("\n")
           WEBrick::RactorLogger.error(e.message)
           res.set_error(e)
         rescue HTTPStatus::Status => e
+          puts e.backtrace.join("\n")
           res.status = e.code
         rescue StandardError => e
-          pp e.backtrace
+          puts e.backtrace.join("\n")
           WEBrick::RactorLogger.error(e)
           res.set_error(e, true)
         ensure

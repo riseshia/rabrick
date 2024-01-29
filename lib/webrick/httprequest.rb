@@ -538,9 +538,11 @@ module WEBrick
     end
 
     def _read_data(io, method, *arg)
-      WEBrick::Utils.timeout(@config[:RequestTimeout]) {
-        return io.__send__(method, *arg)
-      }
+      io.__send__(method, *arg)
+      # XXX:  Ractor::IsolationError: can not get unshareable values from instance variables of classes/modules from non-main Ractors
+      # WEBrick::Utils.timeout(@config[:RequestTimeout]) {
+      #   return io.__send__(method, *arg)
+      # }
     rescue Errno::ECONNRESET
       nil
     rescue Timeout::Error

@@ -62,6 +62,48 @@ module WEBrick
       @config = WEBrick::Config.make_shareable(@config)
     end
 
+    # It needs some time to refactor Whole inheritance structure of WEBrick to use Ractor,
+    # so I just use Ractor for only this class.
+    def start_ractor(passed_sock) # XXX Shadowing make fails to call ractor since it considered as assignment.
+      ractor_args = {
+        config: @config,
+        http_version: @http_version,
+        sock: passed_sock,
+        status: @status,
+        mount_tab: @mount_tab
+      }
+
+      Ractor.new(ractor_args) do |ractor_args|
+        sock = ractor_args[:sock]
+
+        begin
+          begin
+            addr = sock.peeraddr
+            WEBrick::RactorLogger.debug "accept: #{addr[3]}:#{addr[1]}"
+          rescue SocketError
+            WEBrick::RactorLogger.debug "accept: <address unknown>"
+            raise
+          end
+
+          WEBrick::RequestHandler.run(**ractor_args)
+        rescue Errno::ENOTCONN
+          WEBrick::RactorLogger.debug "Errno::ENOTCONN raised"
+        rescue ServerError => e
+          msg = "#{e.class}: #{e.message}\n\t#{e.backtrace[0]}"
+          WEBrick::RactorLogger.error msg
+        rescue Exception => e
+          WEBrick::RactorLogger.error e
+        ensure
+          if addr
+            WEBrick::RactorLogger.debug "close: #{addr[3]}:#{addr[1]}"
+          else
+            WEBrick::RactorLogger.debug "close: <address unknown>"
+          end
+          sock.close
+        end
+      end
+    end
+
     ##
     # Processes requests on +sock+
 

@@ -51,7 +51,7 @@ module WEBrick
     class EOFError < StandardError; end
 
     # HTTP status codes and descriptions
-    StatusMessage = { # :nodoc:
+    StatusMessage = Ractor.make_shareable({ # :nodoc:
       100 => 'Continue',
       101 => 'Switching Protocols',
       200 => 'OK',
@@ -103,7 +103,7 @@ module WEBrick
       505 => 'HTTP Version Not Supported',
       507 => 'Insufficient Storage',
       511 => 'Network Authentication Required'
-    }
+    })
 
     # Maps a status code to the corresponding Status class
     CodeToError = {} # :nodoc:

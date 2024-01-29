@@ -171,11 +171,11 @@ module WEBrick
                     unless config[:DoNotReverseLookup].nil?
                       sock.do_not_reverse_lookup = !!config[:DoNotReverseLookup]
                     end
-                    th = start_ractor(sock)
-                    th[:WEBrickThread] = true
-                    thgroup.add(th)
+                    start_ractor(sock)
+                    # th[:WEBrickThread] = true
+                    # thgroup.add(th)
                   else
-                    @tokens.push(nil)
+                    # @tokens.push(nil)
                   end
                 }
               end
