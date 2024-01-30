@@ -64,7 +64,7 @@ Gem::Specification.new do |s|
 
   if s.respond_to?(:metadata=)
     s.metadata = {
-      "bug_tracker_uri" => "https://github.com/riseshia/webrick/issues"
+      "bug_tracker_uri" => "https://github.com/riseshia/rabrick/issues"
     }
   end
 end
