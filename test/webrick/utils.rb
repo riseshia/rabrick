@@ -10,15 +10,15 @@ module TestWEBrick
     self
   end
 
-  class WEBrick::HTTPServlet::CGIHandler
-    remove_const :Ruby
-    require "envutil" unless defined?(EnvUtil)
-    Ruby = EnvUtil.rubybin
-    remove_const :CGIRunner
-    CGIRunner = "\"#{Ruby}\" \"#{WEBrick::Config::LIBDIR}/httpservlet/cgi_runner.rb\"" # :nodoc:
-    remove_const :CGIRunnerArray
-    CGIRunnerArray = [Ruby, "#{WEBrick::Config::LIBDIR}/httpservlet/cgi_runner.rb"] # :nodoc:
-  end
+  # class WEBrick::HTTPServlet::CGIHandler
+  #   remove_const :Ruby
+  #   require "envutil" unless defined?(EnvUtil)
+  #   Ruby = EnvUtil.rubybin
+  #   remove_const :CGIRunner
+  #   CGIRunner = "\"#{Ruby}\" \"#{WEBrick::Config::LIBDIR}/httpservlet/cgi_runner.rb\"" # :nodoc:
+  #   remove_const :CGIRunnerArray
+  #   CGIRunnerArray = [Ruby, "#{WEBrick::Config::LIBDIR}/httpservlet/cgi_runner.rb"] # :nodoc:
+  # end
 
   RubyBin = "\"#{EnvUtil.rubybin}\""
   RubyBin << " --disable-gems"

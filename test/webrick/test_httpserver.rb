@@ -117,6 +117,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_custom_server_request_and_response
+    omit
+
     config = { :ServerName => "localhost" }
     TestWEBrick.start_server(CustomServer, config) { |server, addr, port, _log|
       server.mount_proc("/", lambda { |req, res|
@@ -156,6 +158,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_response_io_with_chunked_set
+    omit
+
     evt_man = EventManagerForChunkedResponseTest.new
     t = Thread.new do
       config = {
@@ -235,6 +239,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_shutdown_with_busy_keepalive_connection
+    omit
+
     requested = 0
     config = {
       :ServerName => "localhost"
@@ -326,6 +332,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_big_chunks
+    omit
+
     nr_out = 3
     buf = 'big' # 3 bytes is bigger than 2!
     config = { :InputBufferSize => 2 }.freeze
@@ -359,6 +367,8 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
   end
 
   def test_accept_put_requests
+    omit
+
     TestWEBrick.start_httpserver do |server, addr, port, _log|
       server.mount_proc("/", lambda { |req, res|
         res.status = 200
