@@ -72,10 +72,6 @@ module Rabrick
     # Request HTTP version for this response
 
     ##
-    # Filename of the static file in this response.  Only used by the
-    # FileHandler servlet.
-
-    ##
     # Is this a keep-alive response?
 
     ##

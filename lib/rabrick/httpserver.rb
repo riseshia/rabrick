@@ -33,8 +33,6 @@ module Rabrick
     #
     # :AccessLog:: An array of access logs.  See Rabrick::AccessLog
     # :BindAddress:: Local address for the server to bind to
-    # :DocumentRoot:: Root path to serve files from
-    # :DocumentRootOptions:: Options for the default HTTPServlet::FileHandler
     # :HTTPVersion:: The HTTP version of this server
     # :Port:: Port to listen on
     # :RequestTimeout:: Maximum time to wait between requests
@@ -47,10 +45,6 @@ module Rabrick
       @http_version = HTTPVersion.convert(@config[:HTTPVersion])
 
       @mount_tab = MountTable.new
-      if @config[:DocumentRoot]
-        mount("/", HTTPServlet::FileHandler, @config[:DocumentRoot],
-              @config[:DocumentRootOptions])
-      end
 
       unless @config[:AccessLog]
         @config[:AccessLog] = [

@@ -266,33 +266,6 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     assert_equal(0, requested, "Server responded to #{requested} requests after shutdown")
   end
 
-  def test_cntrl_in_path
-    omit
-
-    log_ary = []
-    access_log_ary = []
-    config = {
-      :Port => 0,
-      :BindAddress => '127.0.0.1',
-      :Logger => Rabrick::Log.new(log_ary, Rabrick::BasicLog::WARN),
-      :AccessLog => [[access_log_ary, '']]
-    }
-    s = Rabrick::HTTPServer.new(config)
-    s.mount('/foo', Rabrick::HTTPServlet::FileHandler, __FILE__)
-    th = Thread.new { s.start }
-    addr = s.listeners[0].addr
-
-    http = Net::HTTP.new(addr[3], addr[1])
-    req = Net::HTTP::Get.new('/notexist%0a/foo')
-    http.request(req) { |res| assert_equal('404', res.code) }
-    exp = %(ERROR `/notexist\\n/foo' not found.\n)
-    assert_equal 1, log_ary.size
-    assert_include log_ary[0], exp
-  ensure
-    s&.shutdown
-    th&.join
-  end
-
   def test_gigantic_request_header
     omit
 

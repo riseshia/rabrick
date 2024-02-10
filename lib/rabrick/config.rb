@@ -47,8 +47,6 @@ module Rabrick
       :AccessLog => nil,
       :MimeTypes => HTTPUtils::DefaultMimeTypes,
       :DirectoryIndex => ["index.html", "index.htm", "index.cgi", "index.rhtml"],
-      :DocumentRoot => nil,
-      :DocumentRootOptions => { :FancyIndexing => true },
       :ServerAlias => nil,
       :InputBufferSize => 65_536, # input buffer size in reading request body
       :OutputBufferSize => 65_536, # output buffer size in sending File or IO
@@ -67,31 +65,6 @@ module Rabrick
       # they should be escaped before calling of URI::parse().
       :Escape8bitURI => false
     )
-
-    ##
-    # Default configuration for Rabrick::HTTPServlet::FileHandler
-    #
-    # :AcceptableLanguages::
-    #   Array of languages allowed for accept-language.  There is no default
-    # :FancyIndexing::
-    #   If true, show an index for directories.  The default is true.
-    # :HandlerTable::
-    #   Maps file suffixes to file handlers.  DefaultFileHandler is used by
-    #   default but any servlet can be used.
-    # :NondisclosureName::
-    #   Do not show files matching this array of globs.  .ht* and *~ are
-    #   excluded by default.
-    # :UserDir::
-    #   Directory inside ~user to serve content from for /~user requests.
-    #   Only works if mounted on /.  Disabled by default.
-
-    FileHandler = {
-      :NondisclosureName => [".ht*", "*~"],
-      :FancyIndexing => false,
-      :HandlerTable => {},
-      :UserDir => nil, # e.g. "public_html"
-      :AcceptableLanguages => [] # ["en", "ja", ... ]
-    }
 
     module_function
 

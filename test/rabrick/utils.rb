@@ -82,7 +82,6 @@ module TestWEBrick
   def start_cgi_server(config = {}, log_tester = TestWEBrick::DefaultLogTester, &block)
     config = {
       :CGIInterpreter => TestWEBrick::RubyBin,
-      :DocumentRoot => File.dirname(__FILE__),
       :DirectoryIndex => ["rabrick.cgi"]
     }.merge(config)
     if RUBY_PLATFORM =~ /mswin|mingw|cygwin|bccwin32/
