@@ -1,6 +1,6 @@
 # Rabrick
 
-Rabrick is the [webrick](https://github.com/ruby/webrick) forked, which based on Ractor instead of Thread.
+Rabrick is the [rabrick](https://github.com/ruby/webrick) forked, which based on Ractor instead of Thread.
 
 ## License
 
