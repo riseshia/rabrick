@@ -93,52 +93,6 @@ module Rabrick
       :AcceptableLanguages => [] # ["en", "ja", ... ]
     }
 
-    ##
-    # Default configuration for Rabrick::HTTPAuth::BasicAuth
-    #
-    # :AutoReloadUserDB:: Reload the user database provided by :UserDB
-    #                     automatically?
-
-    BasicAuth = {
-      :AutoReloadUserDB => true
-    }
-
-    ##
-    # Default configuration for Rabrick::HTTPAuth::DigestAuth.
-    #
-    # :Algorithm:: MD5, MD5-sess (default), SHA1, SHA1-sess
-    # :Domain:: An Array of URIs that define the protected space
-    # :Qop:: 'auth' for authentication, 'auth-int' for integrity protection or
-    #        both
-    # :UseOpaque:: Should the server send opaque values to the client?  This
-    #              helps prevent replay attacks.
-    # :CheckNc:: Should the server check the nonce count?  This helps the
-    #            server detect replay attacks.
-    # :UseAuthenticationInfoHeader:: Should the server send an
-    #                                AuthenticationInfo header?
-    # :AutoReloadUserDB:: Reload the user database provided by :UserDB
-    #                     automatically?
-    # :NonceExpirePeriod:: How long should we store used nonces?  Default is
-    #                      30 minutes.
-    # :NonceExpireDelta:: How long is a nonce valid?  Default is 1 minute
-    # :InternetExplorerHack:: Hack which allows Internet Explorer to work.
-    # :OperaHack:: Hack which allows Opera to work.
-
-    DigestAuth = {
-      :Algorithm => 'MD5-sess', # or 'MD5'
-      :Domain => nil, # an array includes domain names.
-      :Qop => ['auth'], # 'auth' or 'auth-int' or both.
-      :UseOpaque => true,
-      :UseNextNonce => false,
-      :CheckNc => false,
-      :UseAuthenticationInfoHeader => true,
-      :AutoReloadUserDB => true,
-      :NonceExpirePeriod => 30 * 60,
-      :NonceExpireDelta => 60,
-      :InternetExplorerHack => true,
-      :OperaHack => true
-    }
-
     module_function
 
     def make_shareable(config)

@@ -88,12 +88,6 @@
 # See Rabrick::HTTPProxy for further details including modifying proxied
 # responses.
 #
-# == Basic and Digest authentication
-#
-# Rabrick provides both Basic and Digest authentication for regular and proxy
-# servers.  See Rabrick::HTTPAuth, Rabrick::HTTPAuth::BasicAuth and
-# Rabrick::HTTPAuth::DigestAuth.
-#
 # == Rabrick as a daemonized Web Server
 #
 # Rabrick can be run as a daemonized server for small loads.
@@ -181,4 +175,3 @@ require 'rabrick/httpresponse'
 require 'rabrick/request_handler'
 require 'rabrick/httpserver'
 require 'rabrick/httpservlet'
-require 'rabrick/httpauth'
