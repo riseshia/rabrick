@@ -21,7 +21,6 @@ Gem::Specification.new do |s|
     "Rakefile",
     "lib/rabrick.rb",
     "lib/rabrick/accesslog.rb",
-    "lib/rabrick/cgi.rb",
     "lib/rabrick/compat.rb",
     "lib/rabrick/config.rb",
     "lib/rabrick/cookie.rb",
@@ -32,11 +31,6 @@ Gem::Specification.new do |s|
     "lib/rabrick/httpserver.rb",
     "lib/rabrick/httpservlet.rb",
     "lib/rabrick/httpservlet/abstract.rb",
-    "lib/rabrick/httpservlet/cgi_runner.rb",
-    "lib/rabrick/httpservlet/cgihandler.rb",
-    "lib/rabrick/httpservlet/erbhandler.rb",
-    "lib/rabrick/httpservlet/filehandler.rb",
-    "lib/rabrick/httpservlet/prochandler.rb",
     "lib/rabrick/httpstatus.rb",
     "lib/rabrick/httputils.rb",
     "lib/rabrick/httpversion.rb",
@@ -45,7 +39,7 @@ Gem::Specification.new do |s|
     "lib/rabrick/server.rb",
     "lib/rabrick/utils.rb",
     "lib/rabrick/version.rb",
-    "rabrick.gemspec"
+    "rabrick.gemspec",
   ]
   s.required_ruby_version = ">= 3.2.0"
 

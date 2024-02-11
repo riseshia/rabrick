@@ -46,7 +46,7 @@ module Rabrick
       :HTTPVersion => HTTPVersion.new("1.1"),
       :AccessLog => nil,
       :MimeTypes => HTTPUtils::DefaultMimeTypes,
-      :DirectoryIndex => ["index.html", "index.htm", "index.cgi", "index.rhtml"],
+      :DirectoryIndex => ["index.html", "index.htm", "index.rhtml"],
       :ServerAlias => nil,
       :InputBufferSize => 65_536, # input buffer size in reading request body
       :OutputBufferSize => 65_536, # output buffer size in sending File or IO

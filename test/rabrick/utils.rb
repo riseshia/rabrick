@@ -10,16 +10,6 @@ module TestWEBrick
     self
   end
 
-  # class Rabrick::HTTPServlet::CGIHandler
-  #   remove_const :Ruby
-  #   require "envutil" unless defined?(EnvUtil)
-  #   Ruby = EnvUtil.rubybin
-  #   remove_const :CGIRunner
-  #   CGIRunner = "\"#{Ruby}\" \"#{Rabrick::Config::LIBDIR}/httpservlet/cgi_runner.rb\"" # :nodoc:
-  #   remove_const :CGIRunnerArray
-  #   CGIRunnerArray = [Ruby, "#{Rabrick::Config::LIBDIR}/httpservlet/cgi_runner.rb"] # :nodoc:
-  # end
-
   RubyBin = "\"#{EnvUtil.rubybin}\""
   RubyBin << " --disable-gems"
   RubyBin << " \"-I#{File.expand_path('../..', File.dirname(__FILE__))}/lib\""
@@ -77,16 +67,5 @@ module TestWEBrick
 
   def start_httpproxy(config = {}, log_tester = DefaultLogTester, &block)
     start_server(Rabrick::HTTPProxyServer, config, log_tester, &block)
-  end
-
-  def start_cgi_server(config = {}, log_tester = TestWEBrick::DefaultLogTester, &block)
-    config = {
-      :CGIInterpreter => TestWEBrick::RubyBin,
-      :DirectoryIndex => ["rabrick.cgi"]
-    }.merge(config)
-    if RUBY_PLATFORM =~ /mswin|mingw|cygwin|bccwin32/
-      config[:CGIPathEnv] = ENV['PATH'] # runtime dll may not be in system dir.
-    end
-    start_server(Rabrick::HTTPServer, config, log_tester, &block)
   end
 end
