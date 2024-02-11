@@ -66,20 +66,6 @@
 #
 # See Rabrick::HTTPServlet::AbstractServlet for more details.
 #
-# == Proxy Server
-#
-# Rabrick can act as a proxy server:
-#
-#   require 'rabrick'
-#   require 'rabrick/httpproxy'
-#
-#   proxy = Rabrick::HTTPProxyServer.new :Port => 8000
-#
-#   trap 'INT' do proxy.shutdown end
-#
-# See Rabrick::HTTPProxy for further details including modifying proxied
-# responses.
-#
 # == Rabrick as a daemonized Web Server
 #
 # Rabrick can be run as a daemonized server for small loads.

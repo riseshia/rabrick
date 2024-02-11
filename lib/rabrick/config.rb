@@ -51,16 +51,6 @@ module Rabrick
       :InputBufferSize => 65_536, # input buffer size in reading request body
       :OutputBufferSize => 65_536, # output buffer size in sending File or IO
 
-      # for HTTPProxyServer
-      :ProxyAuthProc => nil,
-      :ProxyContentHandler => nil,
-      :ProxyVia => true,
-      :ProxyTimeout => true,
-      :ProxyURI => nil,
-
-      :CGIInterpreter => nil,
-      :CGIPathEnv => nil,
-
       # workaround: if Request-URIs contain 8bit chars,
       # they should be escaped before calling of URI::parse().
       :Escape8bitURI => false

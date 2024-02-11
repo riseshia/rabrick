@@ -1,7 +1,6 @@
 # frozen_string_literal: false
 
 require "rabrick"
-require "rabrick/httpproxy"
 
 module TestWEBrick
   NullWriter = Object.new
@@ -63,9 +62,5 @@ module TestWEBrick
 
   def start_httpserver(config = {}, log_tester = DefaultLogTester, &block)
     start_server(Rabrick::HTTPServer, config, log_tester, &block)
-  end
-
-  def start_httpproxy(config = {}, log_tester = DefaultLogTester, &block)
-    start_server(Rabrick::HTTPProxyServer, config, log_tester, &block)
   end
 end

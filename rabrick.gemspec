@@ -25,7 +25,6 @@ Gem::Specification.new do |s|
     "lib/rabrick/config.rb",
     "lib/rabrick/cookie.rb",
     "lib/rabrick/htmlutils.rb",
-    "lib/rabrick/httpproxy.rb",
     "lib/rabrick/httprequest.rb",
     "lib/rabrick/httpresponse.rb",
     "lib/rabrick/httpserver.rb",
