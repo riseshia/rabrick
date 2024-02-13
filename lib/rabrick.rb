@@ -43,29 +43,6 @@
 #
 # Remember that +server.mount_proc+ must precede +server.start+.
 #
-# == Servlets
-#
-# Advanced custom behavior can be obtained through mounting a subclass of
-# Rabrick::HTTPServlet::AbstractServlet.  Servlets provide more modularity
-# when writing an HTTP server than mount_proc allows.  Here is a simple
-# servlet:
-#
-#   class Simple < Rabrick::HTTPServlet::AbstractServlet
-#     def do_GET request, response
-#       status, content_type, body = do_stuff_with request
-#
-#       response.status = 200
-#       response['Content-Type'] = 'text/plain'
-#       response.body = 'Hello, World!'
-#     end
-#   end
-#
-# To initialize the servlet you mount it on the server:
-#
-#   server.mount '/simple', Simple
-#
-# See Rabrick::HTTPServlet::AbstractServlet for more details.
-#
 # == Rabrick as a daemonized Web Server
 #
 # Rabrick can be run as a daemonized server for small loads.
@@ -152,4 +129,3 @@ require 'rabrick/httprequest'
 require 'rabrick/httpresponse'
 require 'rabrick/request_handler'
 require 'rabrick/httpserver'
-require 'rabrick/httpservlet'

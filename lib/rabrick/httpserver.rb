@@ -16,7 +16,6 @@ require_relative 'httputils'
 require_relative 'httpstatus'
 require_relative 'httprequest'
 require_relative 'httpresponse'
-require_relative 'httpservlet'
 require_relative 'accesslog'
 
 module Rabrick
@@ -148,17 +147,6 @@ module Rabrick
     def mount(dir, servlet, *options)
       Rabrick::RactorLogger.debug(format("%s is mounted on %s.", servlet.inspect, dir))
       @mount_tab[dir] = [servlet, options]
-    end
-
-    ##
-    # Mounts +proc+ or +block+ on +dir+ and calls it with a
-    # Rabrick::HTTPRequest and Rabrick::HTTPResponse
-
-    def mount_proc(dir, proc = nil, &block)
-      proc ||= block
-      raise HTTPServerError, "must pass a proc or block" unless proc
-
-      mount(dir, HTTPServlet::ProcHandler.new(proc))
     end
 
     ##

@@ -28,8 +28,6 @@ Gem::Specification.new do |s|
     "lib/rabrick/httprequest.rb",
     "lib/rabrick/httpresponse.rb",
     "lib/rabrick/httpserver.rb",
-    "lib/rabrick/httpservlet.rb",
-    "lib/rabrick/httpservlet/abstract.rb",
     "lib/rabrick/httpstatus.rb",
     "lib/rabrick/httputils.rb",
     "lib/rabrick/httpversion.rb",

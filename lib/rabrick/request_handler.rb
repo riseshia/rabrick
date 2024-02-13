@@ -5,7 +5,6 @@ require_relative 'server'
 require_relative 'httpstatus'
 require_relative 'httprequest'
 require_relative 'httpresponse'
-require_relative 'httpservlet'
 require_relative 'accesslog'
 
 module Rabrick
