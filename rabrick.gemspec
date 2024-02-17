@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
     "lib/rabrick/compat.rb",
     "lib/rabrick/config.rb",
     "lib/rabrick/cookie.rb",
+    "lib/rabrick/null_io.rb",
     "lib/rabrick/htmlutils.rb",
     "lib/rabrick/httprequest.rb",
     "lib/rabrick/httpresponse.rb",
