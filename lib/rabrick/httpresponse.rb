@@ -46,23 +46,6 @@ module Rabrick
     attr_accessor :reason_phrase, :body, :request_method, :request_uri, :request_http_version, :filename, :keep_alive, :upgrade
 
     ##
-    # Body may be:
-    # * a String;
-    # * an IO-like object that responds to +#read+ and +#readpartial+;
-    # * a Proc-like object that responds to +#call+.
-    #
-    # In the latter case, either #chunked= should be set to +true+,
-    # or <code>header['content-length']</code> explicitly provided.
-    # Example:
-    #
-    #   server.mount_proc '/' do |req, res|
-    #     res.chunked = true
-    #     # or
-    #     # res.header['content-length'] = 10
-    #     res.body = proc { |out| out.write(Time.now.to_s) }
-    #   end
-
-    ##
     # Request method for this response
 
     ##

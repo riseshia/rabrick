@@ -30,19 +30,6 @@
 #
 #   server.start
 #
-# == Custom Behavior
-#
-# The easiest way to have a server perform custom operations is through
-# Rabrick::HTTPServer#mount_proc.  The block given will be called with a
-# Rabrick::HTTPRequest with request info and a Rabrick::HTTPResponse which
-# must be filled in appropriately:
-#
-#   server.mount_proc '/' do |req, res|
-#     res.body = 'Hello, world!'
-#   end
-#
-# Remember that +server.mount_proc+ must precede +server.start+.
-#
 # == Rabrick as a daemonized Web Server
 #
 # Rabrick can be run as a daemonized server for small loads.
