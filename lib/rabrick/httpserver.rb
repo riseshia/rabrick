@@ -43,7 +43,7 @@ module Rabrick
       super(config, default)
       @http_version = HTTPVersion.convert(@config[:HTTPVersion])
 
-      @mount_tab = MountTable.new
+      @rack_app = nil
 
       unless @config[:AccessLog]
         @config[:AccessLog] = [
@@ -63,7 +63,6 @@ module Rabrick
         http_version: @http_version,
         sock: passed_sock,
         status: @status,
-        mount_tab: @mount_tab
       }
 
       Ractor.new(ractor_args) do |ractor_args|
@@ -106,7 +105,6 @@ module Rabrick
         http_version: @http_version,
         sock: sock,
         status: @status,
-        mount_tab: @mount_tab
       )
     end
 
@@ -122,8 +120,11 @@ module Rabrick
         raise HTTPStatus::NotFound, "`#{req.unparsed_uri}' not found."
       end
 
-      servlet, options, script_name, path_info = search_servlet(req.path)
-      raise HTTPStatus::NotFound, "`#{req.path}' not found." unless servlet
+      if @rack_app.nil?
+        raise HTTPStatus::NotFound, "`#{req.unparsed_uri}' not found."
+      end
+
+      servlet, options = @rack_app
 
       req.script_name = script_name
       req.path_info = path_info
@@ -140,33 +141,9 @@ module Rabrick
       res["allow"] = "GET,HEAD,POST,OPTIONS"
     end
 
-    ##
-    # Mounts +servlet+ on +dir+ passing +options+ to the servlet at creation
-    # time
-
-    def mount(dir, servlet, *options)
+    def mount_app(servlet, *options)
       Rabrick::RactorLogger.debug(format("%s is mounted on %s.", servlet.inspect, dir))
-      @mount_tab[dir] = [servlet, options]
-    end
-
-    ##
-    # Unmounts +dir+
-
-    def unmount(dir)
-      Rabrick::RactorLogger.debug(format("unmount %s.", dir))
-      @mount_tab.delete(dir)
-    end
-    alias umount unmount
-
-    ##
-    # Finds a servlet for +path+
-
-    def search_servlet(path)
-      script_name, path_info = @mount_tab.scan(path)
-      servlet, options = @mount_tab[script_name]
-      if servlet
-        [servlet, options, script_name, path_info]
-      end
+      @rack_app = [servlet, options]
     end
 
     ##
@@ -193,58 +170,6 @@ module Rabrick
     # request. Can be overridden by subclasses.
     def create_response(with_rabrick_config)
       HTTPResponse.new(with_rabrick_config)
-    end
-
-    ##
-    # Mount table for the path a servlet is mounted on in the directory space
-    # of the server.  Users of Rabrick can only access this indirectly via
-    # Rabrick::HTTPServer#mount, Rabrick::HTTPServer#unmount and
-    # Rabrick::HTTPServer#search_servlet
-
-    class MountTable # :nodoc:
-      def initialize
-        @tab = {}
-        compile
-      end
-
-      def [](dir)
-        dir = normalize(dir)
-        @tab[dir]
-      end
-
-      def []=(dir, val)
-        dir = normalize(dir)
-        @tab[dir] = val
-        compile
-      end
-
-      def delete(dir)
-        dir = normalize(dir)
-        res = @tab.delete(dir)
-        compile
-        res
-      end
-
-      def scan(path)
-        @scanner =~ path
-        [::Regexp.last_match(0), ::Regexp.last_match.post_match]
-      end
-
-      private
-
-      def compile
-        k = @tab.keys
-        k.sort!
-        k.reverse!
-        k.collect! { |path| Regexp.escape(path) }
-        @scanner = Regexp.new("\\A(" + k.join("|") + ")(?=/|\\z)")
-      end
-
-      def normalize(dir)
-        ret = dir ? dir.dup : +""
-        ret.sub!(%r{/+\z}, "")
-        ret
-      end
     end
   end
 end

@@ -18,65 +18,6 @@ class TestWEBrickHTTPServer < Test::Unit::TestCase
     super
   end
 
-  def test_mount
-    httpd = Rabrick::HTTPServer.new(
-      :Logger => NoLog,
-      :DoNotListen => true
-    )
-    httpd.mount("/", :Root)
-    httpd.mount("/foo", :Foo)
-    httpd.mount("/foo/bar", :Bar, :bar1)
-    httpd.mount("/foo/bar/baz", :Baz, :baz1, :baz2)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/")
-    assert_equal(:Root, serv)
-    assert_equal([], opts)
-    assert_equal("", script_name)
-    assert_equal("/", path_info)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/sub")
-    assert_equal(:Root, serv)
-    assert_equal([], opts)
-    assert_equal("", script_name)
-    assert_equal("/sub", path_info)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/sub/")
-    assert_equal(:Root, serv)
-    assert_equal([], opts)
-    assert_equal("", script_name)
-    assert_equal("/sub/", path_info)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/foo")
-    assert_equal(:Foo, serv)
-    assert_equal([], opts)
-    assert_equal("/foo", script_name)
-    assert_equal("", path_info)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/foo/")
-    assert_equal(:Foo, serv)
-    assert_equal([], opts)
-    assert_equal("/foo", script_name)
-    assert_equal("/", path_info)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/foo/sub")
-    assert_equal(:Foo, serv)
-    assert_equal([], opts)
-    assert_equal("/foo", script_name)
-    assert_equal("/sub", path_info)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/foo/bar")
-    assert_equal(:Bar, serv)
-    assert_equal([:bar1], opts)
-    assert_equal("/foo/bar", script_name)
-    assert_equal("", path_info)
-
-    serv, opts, script_name, path_info = httpd.search_servlet("/foo/bar/baz")
-    assert_equal(:Baz, serv)
-    assert_equal(%i[baz1 baz2], opts)
-    assert_equal("/foo/bar/baz", script_name)
-    assert_equal("", path_info)
-  end
-
   class Req
     attr_reader :port, :host
 
