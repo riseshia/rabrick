@@ -5,9 +5,10 @@ require 'rabrick'
 require 'rabrick/rackup_register'
 
 class SampleServer
-  def call(_env)
+  def call(env)
+    env.each { |k, v| puts "#{k}: #{v}" }
     [200, { "Content-Type" => "text/html" }, ["Request received"]]
   end
 end
 
-Rackup::Server.start(app: SampleServer.new)
+Rackup::Server.start(app: SampleServer.new, server: :rabrick)

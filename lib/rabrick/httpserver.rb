@@ -142,7 +142,7 @@ module Rabrick
     end
 
     def mount_app(servlet, *options)
-      Rabrick::RactorLogger.debug(format("%s is mounted on %s.", servlet.inspect, dir))
+      Rabrick::RactorLogger.debug(format("%s is mounted.", servlet.inspect))
       @rack_app = [servlet, options]
     end
 

@@ -14,7 +14,7 @@ module Rabrick
     ##
     # Processes requests on +sock+
 
-    def run(config:, http_version:, sock:, status:, mount_tab:)
+    def run(config:, http_version:, sock:, status:, rack_app:)
       loop do
         req = create_request(config)
         res = create_response(config)
@@ -35,7 +35,7 @@ module Rabrick
           res.request_http_version = req.http_version
           res.keep_alive = req.keep_alive?
 
-          service(mount_tab, req, res)
+          service(rack_app, req, res)
         rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => e
           puts e.backtrace.join("\n")
           res.set_error(e)
@@ -68,7 +68,7 @@ module Rabrick
     ##
     # Services +req+ and fills in +res+
 
-    def service(mount_tab, req, res)
+    def service(rack_app, req, res)
       if req.unparsed_uri == "*"
         if req.request_method == "OPTIONS"
           do_OPTIONS(req, res)
@@ -93,17 +93,6 @@ module Rabrick
 
     def do_OPTIONS(_req, res)
       res["allow"] = "GET,HEAD,POST,OPTIONS"
-    end
-
-    ##
-    # Finds a servlet for +path+
-
-    def search_servlet(mount_tab, path)
-      script_name, path_info = mount_tab.scan(path)
-      servlet, options = mount_tab[script_name]
-      if servlet
-        [servlet, options, script_name, path_info]
-      end
     end
 
     ##
