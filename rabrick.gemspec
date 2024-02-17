@@ -36,6 +36,8 @@ Gem::Specification.new do |s|
     "lib/rabrick/server.rb",
     "lib/rabrick/utils.rb",
     "lib/rabrick/version.rb",
+    "lib/rabrick/rackup_register.rb",
+    "lib/rack/handler/rabrick.rb",
     "rabrick.gemspec",
   ]
   s.required_ruby_version = ">= 3.2.0"

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'rackup'
+require 'rabrick'
+require 'rabrick/rackup_register'
 
 class SampleServer
   def call(_env)
