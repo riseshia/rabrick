@@ -172,7 +172,7 @@ module Rabrick
                     end
                     start_ractor(sock)
                   else
-                    # @tokens.push(nil)
+                    @tokens.push(nil)
                   end
                 }
               end
