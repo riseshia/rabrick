@@ -44,7 +44,7 @@ module Rabrick
       super(config, default)
       @http_version = HTTPVersion.convert(@config[:HTTPVersion])
 
-      @rack_app = @config[:App] or raise HTTPServerError, "No app specified"
+      @app = @config.delete(:App) or raise HTTPServerError, "No app specified"
 
       unless @config[:AccessLog]
         @config[:AccessLog] = [
@@ -64,7 +64,7 @@ module Rabrick
         http_version: @http_version,
         sock: passed_sock,
         status: @status,
-        rack_app: @rack_app,
+        app: @app,
       }
 
       Ractor.new(ractor_args) do |ractor_args|

@@ -14,7 +14,7 @@ module Rabrick
     ##
     # Processes requests on +sock+
 
-    def run(config:, http_version:, sock:, status:, rack_app:)
+    def run(config:, http_version:, sock:, status:, app:)
       loop do
         req = create_request(config)
         res = create_response(config)
@@ -35,7 +35,7 @@ module Rabrick
           res.request_http_version = req.http_version
           res.keep_alive = req.keep_alive?
 
-          service(rack_app, req, res)
+          service(app, req, res)
         rescue HTTPStatus::EOFError, HTTPStatus::RequestTimeout => e
           puts e.backtrace.join("\n")
           res.set_error(e)
