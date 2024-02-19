@@ -153,7 +153,6 @@ module Rabrick
 
         shutdown_pipe = @shutdown_pipe
 
-        thgroup = ThreadGroup.new
         begin
           while @status == :Running
             begin
@@ -172,8 +171,6 @@ module Rabrick
                       sock.do_not_reverse_lookup = !!config[:DoNotReverseLookup]
                     end
                     start_ractor(sock)
-                    # th[:WEBrickThread] = true
-                    # thgroup.add(th)
                   else
                     # @tokens.push(nil)
                   end
@@ -195,7 +192,6 @@ module Rabrick
           cleanup_listener
           @status = :Shutdown
           Rabrick::RactorLogger.info "going to shutdown ..."
-          thgroup.list.each { |th| th.join if th[:WEBrickThread] }
           Rabrick::RactorLogger.info "#{self.class}#start done."
           @status = :Stop
         end
