@@ -38,12 +38,13 @@ module Rabrick
     # :ServerAlias:: Array of alternate names for this server for virtual
     #                hosting
     # :ServerName:: Name for this server for virtual hosting
+    # :App:: Rack application to run
 
     def initialize(config = {}, default = Config::HTTP)
       super(config, default)
       @http_version = HTTPVersion.convert(@config[:HTTPVersion])
 
-      @rack_app = nil
+      @rack_app = @config[:App] or raise HTTPServerError, "No app specified"
 
       unless @config[:AccessLog]
         @config[:AccessLog] = [
@@ -63,6 +64,7 @@ module Rabrick
         http_version: @http_version,
         sock: passed_sock,
         status: @status,
+        rack_app: @rack_app,
       }
 
       Ractor.new(ractor_args) do |ractor_args|
@@ -106,44 +108,6 @@ module Rabrick
         sock: sock,
         status: @status,
       )
-    end
-
-    ##
-    # Services +req+ and fills in +res+
-
-    def service(req, res)
-      if req.unparsed_uri == "*"
-        if req.request_method == "OPTIONS"
-          do_OPTIONS(req, res)
-          raise HTTPStatus::OK
-        end
-        raise HTTPStatus::NotFound, "`#{req.unparsed_uri}' not found."
-      end
-
-      if @rack_app.nil?
-        raise HTTPStatus::NotFound, "`#{req.unparsed_uri}' not found."
-      end
-
-      servlet, options = @rack_app
-
-      req.script_name = script_name
-      req.path_info = path_info
-      si = servlet.get_instance(self, *options)
-      Rabrick::RactorLogger.debug(format("%s is invoked.", si.class.name))
-      si.service(req, res)
-    end
-
-    ##
-    # The default OPTIONS request handler says GET, HEAD, POST and OPTIONS
-    # requests are allowed.
-
-    def do_OPTIONS(_req, res)
-      res["allow"] = "GET,HEAD,POST,OPTIONS"
-    end
-
-    def mount_app(servlet, *options)
-      Rabrick::RactorLogger.debug(format("%s is mounted.", servlet.inspect))
-      @rack_app = [servlet, options]
     end
 
     ##

@@ -68,7 +68,7 @@ module Rabrick
     ##
     # Services +req+ and fills in +res+
 
-    def service(rack_app, req, res)
+    def service(app, req, res)
       if req.unparsed_uri == "*"
         if req.request_method == "OPTIONS"
           do_OPTIONS(req, res)
@@ -77,14 +77,72 @@ module Rabrick
         raise HTTPStatus::NotFound, "`#{req.unparsed_uri}' not found."
       end
 
-      servlet, options, script_name, path_info = search_servlet(mount_tab, req.path)
-      raise HTTPStatus::NotFound, "`#{req.path}' not found." unless servlet
+      env = req.meta_vars
+      env.delete_if { |_k, v| v.nil? }
 
-      req.script_name = script_name
-      req.path_info = path_info
-      si = servlet.get_instance(self, *options)
-      Rabrick::RactorLogger.debug(format("%s is invoked.", si.class.name))
-      si.service(req, res)
+      input = req.body ? StringIO.new(req.body) : NullIO.new
+
+      env.update(
+        ::Rack::RACK_INPUT => input,
+        ::Rack::RACK_ERRORS => $stderr,
+        ::Rack::RACK_URL_SCHEME => "http", # XXX: rabrick does not support https at now.
+        ::Rack::RACK_IS_HIJACK => true,
+      )
+
+      env[::Rack::QUERY_STRING] ||= ""
+      unless env[::Rack::PATH_INFO] == ""
+        path, n = req.request_uri.path, env[::Rack::SCRIPT_NAME].length
+        env[::Rack::PATH_INFO] = path[n, path.length - n]
+      end
+      env[::Rack::REQUEST_PATH] ||= [env[::Rack::SCRIPT_NAME], env[::Rack::PATH_INFO]].join
+
+      status, headers, body = app.call(env)
+
+      begin
+        res.status = status
+
+        if value = headers[::Rack::RACK_HIJACK]
+          io_lambda = value
+          body = nil
+        elsif !body.respond_to?(:to_path) && !body.respond_to?(:each)
+          io_lambda = body
+          body = nil
+        end
+
+        if value = headers.delete("set-cookie")
+          res.cookies.concat(Array(value))
+        end
+
+        headers.each do |key, value|
+          # Skip keys starting with rack., per Rack SPEC
+          next if key.start_with?("rack.")
+
+          # Since Rabrick won't accept repeated headers,
+          # merge the values per RFC 1945 section 4.2.
+          value = value.join(", ") if Array === value
+          res[key] = value
+        end
+
+        if io_lambda
+          protocol = headers["rack.protocol"] || headers["upgrade"]
+
+          if protocol
+            # Set all the headers correctly for an upgrade response:
+            res.upgrade!(protocol)
+          end
+          res.body = io_lambda
+        elsif body.respond_to?(:to_path)
+          res.body = ::File.open(body.to_path, "rb")
+        else
+          buffer = String.new
+          body.each do |part|
+            buffer << part
+          end
+          res.body = buffer
+        end
+      ensure
+        body.close if body.respond_to?(:close)
+      end
     end
 
     ##

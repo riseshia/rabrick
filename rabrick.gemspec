@@ -48,6 +48,8 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/riseshia/rabrick"
   s.licenses = ["Ruby", "BSD-2-Clause"]
 
+  s.add_runtime_dependency "nbproc"
+
   if s.respond_to?(:metadata=)
     s.metadata = {
       "bug_tracker_uri" => "https://github.com/riseshia/rabrick/issues"

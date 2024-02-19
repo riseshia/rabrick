@@ -2,6 +2,7 @@
 
 require "test/unit"
 require "tempfile"
+require "nbproc"
 require "rabrick"
 require_relative "utils"
 
@@ -129,7 +130,8 @@ class TestWEBrickServer < Test::Unit::TestCase
     server = Rabrick::HTTPServer.new(
       :BindAddress => '0.0.0.0',
       :Port => 0,
-      :Logger => warn_flunk
+      :Logger => warn_flunk,
+      :App => nbproc { [200, {}, ["Hello, world!"]] },
     )
     2.times {
       server_thread = Thread.start {
