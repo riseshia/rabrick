@@ -23,7 +23,7 @@ module Rabrick
   # Rabrick servlets
 
   class HTTPRequest
-    BODY_CONTAINABLE_METHODS = %w[POST PUT] # :nodoc:
+    BODY_CONTAINABLE_METHODS = Ractor.make_shareable(%w[POST PUT]) # :nodoc:
 
     # :section: Request line
 
